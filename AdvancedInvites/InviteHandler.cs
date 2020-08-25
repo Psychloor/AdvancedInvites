@@ -41,8 +41,6 @@ namespace AdvancedInvites
                 JoinYourself();
             }
             
-
-            
             Utilities.ShowPopupWindow(
                 "Invitation from " + notification.senderUsername,
                 $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {type}\n\nWanna go by yourself or drop a portal for the lads?",
@@ -65,9 +63,11 @@ namespace AdvancedInvites
                             ApiWorld apiWorld = container.Model.Cast<ApiWorld>();
                             ApiWorldInstance apiWorldInstance = new ApiWorldInstance(apiWorld, worldId.Split(':')[1], 0);
 
+                            // grab local vrcplayer
                             var playerTransform = VRCPlayer.field_Internal_Static_VRCPlayer_0.transform;
                             const bool ShowAlerts = true;
 
+                            // CreatePortal (before il2cpp)
                             PortalInternal.Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean_0(
                                 apiWorld,
                                 apiWorldInstance,
