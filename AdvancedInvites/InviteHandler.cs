@@ -5,45 +5,29 @@ namespace AdvancedInvites
 
     using Transmtn.DTO.Notifications;
 
+    using UnityEngine;
+
     using VRC.Core;
     using VRC.SDKBase;
 
     public static class InviteHandler
     {
 
-        private static Notification currentNotification;
-
-        private static string worldId;
+        private static string worldInstance;
 
         public static void HandleInvite(Notification notification)
         {
-            currentNotification = notification;
-            worldId = notification.details["worldId"].ToString();
+            worldInstance = notification.details["worldId"].ToString();
 
-            string type = "Public";
-            if (worldId.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                type = "Friends+";
-            }
-            
-            else if (worldId.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                JoinYourself();
-            }
-            
-            else if (worldId.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                type = "Invite+";
-            }
-            
-            else if (worldId.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                JoinYourself();
-            }
-            
+            var instanceType = "Public";
+            if (worldInstance.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Friends+";
+            else if (worldInstance.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) JoinYourself();
+            else if (worldInstance.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Invite+";
+            else if (worldInstance.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0) JoinYourself();
+
             Utilities.ShowPopupWindow(
                 "Invitation from " + notification.senderUsername,
-                $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {type}\n\nWanna go by yourself or drop a portal for the lads?",
+                $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {instanceType}\n\nWanna go by yourself or drop a portal for the lads?",
                 "Go Yourself",
                 JoinYourself,
                 "Drop Portal",
@@ -52,37 +36,34 @@ namespace AdvancedInvites
 
         private static void DropPortal()
         {
-            Utilities.CloseUi();
-
+            string worldId = worldInstance.Split(':')[0];
+            string instanceIdWithTags = worldInstance.Split(':')[1];
+            const int PlayerCount = 0;
+            const bool ShowAlerts = true;
+            
             // not gonna share the custom portal creation so apifetching and making worldinstance it is
+            // also needed as createportal will check for tags in the apiworld too
             API.Fetch<ApiWorld>(
-                worldId.Split(':')[0],
+                worldId,
+                // On Success which it'll be if valid vanilla invite
                 new Action<ApiContainer>(
                     container =>
                         {
+                            Utilities.CloseUi();
                             ApiWorld apiWorld = container.Model.Cast<ApiWorld>();
-                            ApiWorldInstance apiWorldInstance = new ApiWorldInstance(apiWorld, worldId.Split(':')[1], 0);
+                            ApiWorldInstance apiWorldInstance = new ApiWorldInstance(apiWorld, instanceIdWithTags, PlayerCount);
+                            
+                            Transform playerTransform = Utilities.GetLocalPlayerTransform();
 
-                            // grab local vrcplayer
-                            var playerTransform = VRCPlayer.field_Internal_Static_VRCPlayer_0.transform;
-                            const bool ShowAlerts = true;
-
-                            // CreatePortal (before il2cpp)
-                            PortalInternal.Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean_0(
-                                apiWorld,
-                                apiWorldInstance,
-                                playerTransform.position,
-                                playerTransform.forward,
-                                ShowAlerts);
-                            currentNotification = null;
+                            // CreatePortal (before il2cpp) and ignore portal successfully created as of now
+                            Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward, ShowAlerts);
                         }));
         }
 
         private static void JoinYourself()
         {
             Utilities.CloseUi();
-            Networking.GoToRoom(worldId);
-            currentNotification = null;
+            Networking.GoToRoom(worldInstance);
         }
 
     }

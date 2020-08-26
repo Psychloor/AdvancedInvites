@@ -2,7 +2,9 @@
 
 using MelonLoader;
 
-[assembly: MelonInfo(typeof(AdvancedInviteSystem), AdvancedInvites.BuildInfo.Name, AdvancedInvites.BuildInfo.Version, AdvancedInvites.BuildInfo.Author, AdvancedInvites.BuildInfo.DownloadLink)]
+using BuildInfo = AdvancedInvites.BuildInfo;
+
+[assembly: MelonInfo(typeof(AdvancedInviteSystem), BuildInfo.Name, BuildInfo.Version, BuildInfo.Author)]
 [assembly: MelonGame("VRChat", "VRChat")]
 
 namespace AdvancedInvites
@@ -13,6 +15,8 @@ namespace AdvancedInvites
     using System.Reflection;
 
     using Harmony;
+
+    using MelonLoader;
 
     using Transmtn.DTO.Notifications;
 
@@ -32,14 +36,10 @@ namespace AdvancedInvites
 
         private static bool AcceptNotificationPatch()
         {
-            Notification notification = QuickMenu.prop_QuickMenu_0.field_Private_Notification_0;
-            if (notification.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase))
-            {
-                InviteHandler.HandleInvite(notification);
-                return false;
-            }
-
-            return true;
+            Notification notification = Utilities.GetCurrentActiveNotification();
+            if (!notification.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase)) return true;
+            InviteHandler.HandleInvite(notification);
+            return false;
         }
 
     }
