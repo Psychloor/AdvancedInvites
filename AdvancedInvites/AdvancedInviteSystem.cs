@@ -4,7 +4,7 @@ using MelonLoader;
 
 using BuildInfo = AdvancedInvites.BuildInfo;
 
-[assembly: MelonInfo(typeof(AdvancedInviteSystem), BuildInfo.Name, BuildInfo.Version, BuildInfo.Author)]
+[assembly: MelonInfo(typeof(AdvancedInviteSystem), BuildInfo.Name, BuildInfo.Version, BuildInfo.Author, BuildInfo.DownloadLink)]
 [assembly: MelonGame("VRChat", "VRChat")]
 
 namespace AdvancedInvites
