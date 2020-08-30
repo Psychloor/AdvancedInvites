@@ -35,16 +35,42 @@ namespace AdvancedInvites
                     // ignored
                 }
         }
-
+        
+        private static int showPopWindowBothIndex = -1;
         public static void ShowPopupWindow(string title, string content, string button1, Action action, string button2, Action action2)
         {
-            VRCUiPopupManager.field_Private_Static_VRCUiPopupManager_0.Method_Public_Void_String_String_String_Action_String_Action_Action_1_VRCUiPopup_1(
-                title,
-                content,
-                button1,
-                action,
-                button2,
-                action2);
+            if (showPopWindowBothIndex == -1)
+            {
+                MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
+                    m => m.Name.StartsWith(
+                             "Method_Public_Void_String_String_String_Action_String_Action_Action_1_VRCUiPopup")
+                         && m.XRefScanFor("StandardPopupV2"));
+                if (popupV2Method.Name.IndexOf("VRCUiPopup_0", StringComparison.OrdinalIgnoreCase) >= 0) showPopWindowBothIndex = 0;
+                else if (popupV2Method.Name.IndexOf("VRCUiPopup_1", StringComparison.OrdinalIgnoreCase) >= 0) showPopWindowBothIndex = 1;
+            }
+
+            switch (showPopWindowBothIndex)
+            {
+                case 0:
+                    VRCUiPopupManager.field_Private_Static_VRCUiPopupManager_0.Method_Public_Void_String_String_String_Action_String_Action_Action_1_VRCUiPopup_0(
+                        title,
+                        content,
+                        button1,
+                        action,
+                        button2,
+                        action2);
+                    break;
+                
+                case 1:
+                    VRCUiPopupManager.field_Private_Static_VRCUiPopupManager_0.Method_Public_Void_String_String_String_Action_String_Action_Action_1_VRCUiPopup_1(
+                        title,
+                        content,
+                        button1,
+                        action,
+                        button2,
+                        action2);
+                    break;
+            }
         }
 
         public static bool XRefScanFor(this MethodBase methodBase, string searchTerm)
