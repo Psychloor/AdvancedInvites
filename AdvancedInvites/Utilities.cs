@@ -39,42 +39,30 @@ namespace AdvancedInvites
                     // ignored
                 }
         }
-        
-        private static int showPopWindowBothIndex = -1;
-        public static void ShowPopupWindow(string title, string content, string button1, Action action, string button2, Action action2)
+
+        private delegate void ShowPopupWindowDelegate(string title, string content, string button1, Action action, string button2, Action action2);
+
+        private static ShowPopupWindowDelegate ourShowPopupWindowDelegate;
+
+        private static ShowPopupWindowDelegate GetShowPopupWindowDelegate
         {
-            if (showPopWindowBothIndex == -1)
+            get
             {
+                if (ourShowPopupWindowDelegate != null) return ourShowPopupWindowDelegate;
+                
                 MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
                     m => m.Name.StartsWith(
                              "Method_Public_Void_String_String_String_Action_String_Action_Action_1_VRCUiPopup")
                          && m.XRefScanFor("StandardPopupV2"));
-                if (popupV2Method.Name.IndexOf("VRCUiPopup_0", StringComparison.OrdinalIgnoreCase) >= 0) showPopWindowBothIndex = 0;
-                else if (popupV2Method.Name.IndexOf("VRCUiPopup_1", StringComparison.OrdinalIgnoreCase) >= 0) showPopWindowBothIndex = 1;
-            }
-
-            switch (showPopWindowBothIndex)
-            {
-                case 0:
-                    VRCUiPopupManager.field_Private_Static_VRCUiPopupManager_0.Method_Public_Void_String_String_String_Action_String_Action_Action_1_VRCUiPopup_0(
-                        title,
-                        content,
-                        button1,
-                        action,
-                        button2,
-                        action2);
-                    break;
                 
-                case 1:
-                    VRCUiPopupManager.field_Private_Static_VRCUiPopupManager_0.Method_Public_Void_String_String_String_Action_String_Action_Action_1_VRCUiPopup_1(
-                        title,
-                        content,
-                        button1,
-                        action,
-                        button2,
-                        action2);
-                    break;
+                ourShowPopupWindowDelegate = (ShowPopupWindowDelegate)Delegate.CreateDelegate(typeof(VRCUiPopupManager), VRCUiPopupManager.prop_VRCUiPopupManager_0, popupV2Method);
+                return ourShowPopupWindowDelegate;
             }
+        }
+        
+        public static void ShowPopupWindow(string title, string content, string button1, Action action, string button2, Action action2)
+        {
+            GetShowPopupWindowDelegate(title, content, button1, action, button2, action2);
         }
 
         public static bool XRefScanFor(this MethodBase methodBase, string searchTerm)
@@ -92,60 +80,31 @@ namespace AdvancedInvites
         {
             return QuickMenu.prop_QuickMenu_0.field_Private_Notification_0;
         }
-        
-        private static int CreatePortalIndex = -1;
+
+        private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts);
+
+        private static CreatePortalDelegate ourCreatePortalDelegate;
+
+        private static CreatePortalDelegate GetCreatePortalDelegate
+        {
+            get
+            {
+                if (ourCreatePortalDelegate != null) return ourCreatePortalDelegate;
+                
+                var portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static).First(
+                    m => m.Name.StartsWith(
+                             "Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean")
+                         && m.XRefScanFor("admin_dont_allow_portal"));
+
+                ourCreatePortalDelegate = (CreatePortalDelegate)Delegate.CreateDelegate(typeof(PortalInternal), portalMethod);
+                return ourCreatePortalDelegate;
+            }
+        }
         
         // return value might be used later once i figure out delete notification method
         public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts)
         {
-            if (CreatePortalIndex == -1)
-            {
-                var portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(
-                    m => m.Name.StartsWith(
-                             "Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean")
-                         && m.XRefScanFor("admin_dont_allow_portal"));
-                if (portalMethod == null)
-                {
-                    MelonLogger.LogError("Couldn't find create portal index");
-                    return false;
-                }
-
-                if (portalMethod.Name.EndsWith("0")) CreatePortalIndex = 0;
-                else if (portalMethod.Name.EndsWith("1")) CreatePortalIndex = 1;
-                else if (portalMethod.Name.EndsWith("2")) CreatePortalIndex = 2;
-            }
-            
-            
-            switch (CreatePortalIndex)
-            {
-                case 0:
-                    return PortalInternal.Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean_PDM_0(
-                        apiWorld,
-                        apiWorldInstance,
-                        position,
-                        forward,
-                        showAlerts);
-                    break;
-                
-                case 1:
-                    return PortalInternal.Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean_PDM_1(
-                        apiWorld,
-                        apiWorldInstance,
-                        position,
-                        forward,
-                        showAlerts);
-                    break;
-                
-                case 2:
-                    return PortalInternal.Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean_PDM_2(
-                        apiWorld,
-                        apiWorldInstance,
-                        position,
-                        forward,
-                        showAlerts);
-                    break;
-            }
-            return false;
+           return GetCreatePortalDelegate(apiWorld, apiWorldInstance, position, forward, showAlerts);
         }
 
         public static void ShowAlert(string title, string content, float timeOut)
