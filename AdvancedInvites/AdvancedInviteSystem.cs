@@ -25,13 +25,20 @@ namespace AdvancedInvites
 
         public override void OnApplicationStart()
         {
-            // Accept Notification
-            MethodInfo acceptNotificationMethod = typeof(QuickMenu).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                m => m.GetParameters().Length == 0 && m.XRefScanFor("AcceptNotification"));
+            try
+            {
+                // Accept Notification
+                MethodInfo acceptNotificationMethod = typeof(QuickMenu).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
+                    m => m.GetParameters().Length == 0 && m.XRefScanFor("AcceptNotification"));
 
-            harmonyInstance.Patch(
-                acceptNotificationMethod,
-                new HarmonyMethod(typeof(AdvancedInviteSystem).GetMethod(nameof(AcceptNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
+                harmonyInstance.Patch(
+                    acceptNotificationMethod,
+                    new HarmonyMethod(typeof(AdvancedInviteSystem).GetMethod(nameof(AcceptNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
+            }
+            catch (Exception e)
+            {
+                MelonLogger.LogError("Something went wrong patching: " + e.Message);
+            }
         }
 
         private static bool AcceptNotificationPatch()

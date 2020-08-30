@@ -5,13 +5,17 @@ namespace AdvancedInvites
     using System.Linq;
     using System.Reflection;
 
+    using MelonLoader;
+
     using Transmtn.DTO.Notifications;
 
     using UnhollowerRuntimeLib.XrefScans;
 
     using UnityEngine;
 
+    using VRC;
     using VRC.Core;
+    using VRC.SDKBase;
 
     public static class Utilities
     {
@@ -76,10 +80,7 @@ namespace AdvancedInvites
         public static bool XRefScanFor(this MethodBase methodBase, string searchTerm)
         {
             return XrefScanner.XrefScan(methodBase).Any(
-                xref => xref.Type == XrefType.Global && xref.ReadAsObject() != null && xref
-                                                                                       .ReadAsObject().ToString().IndexOf(
-                                                                                           searchTerm,
-                                                                                           StringComparison.OrdinalIgnoreCase) >= 0);
+                xref => xref.Type == XrefType.Global && xref.ReadAsObject()?.ToString().IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         public static Transform GetLocalPlayerTransform()
@@ -92,15 +93,64 @@ namespace AdvancedInvites
             return QuickMenu.prop_QuickMenu_0.field_Private_Notification_0;
         }
         
+        private static int CreatePortalIndex = -1;
+        
         // return value might be used later once i figure out delete notification method
         public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts)
         {
-            return PortalInternal.Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean_0(
-                apiWorld,
-                apiWorldInstance,
-                position,
-                forward,
-                showAlerts);
+            if (CreatePortalIndex == -1)
+            {
+                var portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(
+                    m => m.Name.StartsWith(
+                             "Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean")
+                         && m.XRefScanFor("admin_dont_allow_portal"));
+                if (portalMethod == null)
+                {
+                    MelonLogger.LogError("Couldn't find create portal index");
+                    return false;
+                }
+
+                if (portalMethod.Name.EndsWith("0")) CreatePortalIndex = 0;
+                else if (portalMethod.Name.EndsWith("1")) CreatePortalIndex = 1;
+                else if (portalMethod.Name.EndsWith("2")) CreatePortalIndex = 2;
+            }
+            
+            
+            switch (CreatePortalIndex)
+            {
+                case 0:
+                    return PortalInternal.Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean_PDM_0(
+                        apiWorld,
+                        apiWorldInstance,
+                        position,
+                        forward,
+                        showAlerts);
+                    break;
+                
+                case 1:
+                    return PortalInternal.Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean_PDM_1(
+                        apiWorld,
+                        apiWorldInstance,
+                        position,
+                        forward,
+                        showAlerts);
+                    break;
+                
+                case 2:
+                    return PortalInternal.Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean_PDM_2(
+                        apiWorld,
+                        apiWorldInstance,
+                        position,
+                        forward,
+                        showAlerts);
+                    break;
+            }
+            return false;
+        }
+
+        public static void ShowAlert(string title, string content, float timeOut)
+        {
+            VRCUiPopupManager.prop_VRCUiPopupManager_0.Method_Public_Void_String_String_Single_0(title, content, timeOut);
         }
 
     }
