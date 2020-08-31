@@ -40,29 +40,29 @@ namespace AdvancedInvites
                 }
         }
 
-        private delegate void ShowPopupWindowDelegate(string title, string content, string button1, Action action, string button2, Action action2);
+        private delegate void ShowPopupWindowBothDelegate(string title, string content, string button1, Il2CppSystem.Action action, string button2, Il2CppSystem.Action action2, Il2CppSystem.Action<VRCUiPopup> onCreated = null);
 
-        private static ShowPopupWindowDelegate ourShowPopupWindowDelegate;
+        private static ShowPopupWindowBothDelegate ourShowPopupWindowBothDelegate;
 
-        private static ShowPopupWindowDelegate GetShowPopupWindowDelegate
+        private static ShowPopupWindowBothDelegate GetShowPopupWindowBothDelegate
         {
             get
             {
-                if (ourShowPopupWindowDelegate != null) return ourShowPopupWindowDelegate;
-                
-                MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                    m => m.Name.StartsWith(
-                             "Method_Public_Void_String_String_String_Action_String_Action_Action_1_VRCUiPopup")
-                         && m.XRefScanFor("StandardPopupV2"));
-                
-                ourShowPopupWindowDelegate = (ShowPopupWindowDelegate)Delegate.CreateDelegate(typeof(VRCUiPopupManager), VRCUiPopupManager.prop_VRCUiPopupManager_0, popupV2Method);
-                return ourShowPopupWindowDelegate;
+                if (ourShowPopupWindowBothDelegate != null) return ourShowPopupWindowBothDelegate;
+                MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                    m => m.GetParameters().Length >= 6 && m.XRefScanFor("Popups/StandardPopupV2"));
+
+                ourShowPopupWindowBothDelegate = (ShowPopupWindowBothDelegate)Delegate.CreateDelegate(
+                    typeof(ShowPopupWindowBothDelegate),
+                    VRCUiPopupManager.field_Private_Static_VRCUiPopupManager_0,
+                    popupV2Method);
+                return ourShowPopupWindowBothDelegate;
             }
         }
-        
-        public static void ShowPopupWindow(string title, string content, string button1, Action action, string button2, Action action2)
+
+        public static void ShowPopupWindow(string title, string content, string button1, Action action, string button2, Action action2, Action<VRCUiPopup> onCreated = null)
         {
-            GetShowPopupWindowDelegate(title, content, button1, action, button2, action2);
+            GetShowPopupWindowBothDelegate(title, content, button1, action, button2, action2, onCreated);
         }
 
         public static bool XRefScanFor(this MethodBase methodBase, string searchTerm)
@@ -92,11 +92,10 @@ namespace AdvancedInvites
                 if (ourCreatePortalDelegate != null) return ourCreatePortalDelegate;
                 
                 var portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static).First(
-                    m => m.Name.StartsWith(
-                             "Method_Public_Static_Boolean_ApiWorld_ApiWorldInstance_Vector3_Vector3_Boolean")
+                    m => m.ReturnType == typeof(bool) && m.GetParameters().Length == 5 && m.GetParameters()[0].ParameterType == typeof(ApiWorld)
                          && m.XRefScanFor("admin_dont_allow_portal"));
 
-                ourCreatePortalDelegate = (CreatePortalDelegate)Delegate.CreateDelegate(typeof(PortalInternal), portalMethod);
+                ourCreatePortalDelegate = (CreatePortalDelegate)Delegate.CreateDelegate(typeof(CreatePortalDelegate), portalMethod);
                 return ourCreatePortalDelegate;
             }
         }
@@ -105,11 +104,6 @@ namespace AdvancedInvites
         public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts)
         {
            return GetCreatePortalDelegate(apiWorld, apiWorldInstance, position, forward, showAlerts);
-        }
-
-        public static void ShowAlert(string title, string content, float timeOut)
-        {
-            VRCUiPopupManager.prop_VRCUiPopupManager_0.Method_Public_Void_String_String_Single_0(title, content, timeOut);
         }
 
     }
