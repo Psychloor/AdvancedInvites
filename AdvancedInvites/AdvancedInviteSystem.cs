@@ -28,7 +28,7 @@ namespace AdvancedInvites
             MelonPrefs.RegisterCategory("AdvancedInvites", "Advanced Invites");
             MelonPrefs.RegisterBool("AdvancedInvites", "RemoveNotifications", InviteHandler.RemoveNotifications, "Remove Notifications", true);
             InviteHandler.RemoveNotifications = MelonPrefs.GetBool("AdvancedInvites", "RemoveNotifications");
-            
+
             try
             {
                 // Accept Notification
@@ -49,7 +49,6 @@ namespace AdvancedInvites
         {
             InviteHandler.RemoveNotifications = MelonPrefs.GetBool("AdvancedInvites", "RemoveNotifications");
         }
-
 
         private static bool AcceptNotificationPatch()
         {
