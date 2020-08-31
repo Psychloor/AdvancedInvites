@@ -15,23 +15,44 @@ namespace AdvancedInvites
 
         private static string worldInstance;
 
+        private static Notification currentNotification;
+
+        public static bool RemoveNotifications;
+
         public static void HandleInvite(Notification notification)
         {
+            currentNotification = notification;
             worldInstance = notification.details["worldId"].ToString();
 
             var instanceType = "Public";
             if (worldInstance.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Friends+";
-            else if (worldInstance.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) JoinYourself();
+            else if (worldInstance.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Friends Only";
             else if (worldInstance.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Invite+";
-            else if (worldInstance.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0) JoinYourself();
+            else if (worldInstance.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Invite (Private)";
 
-            Utilities.ShowPopupWindow(
-                "Invitation from " + notification.senderUsername,
-                $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {instanceType}\n\nWanna go by yourself or drop a portal for the lads?",
-                "Go Yourself",
-                JoinYourself,
-                "Drop Portal",
-                DropPortal);
+            switch (instanceType)
+            {
+                case "Public":
+                    case "Friends+":
+                    case "Invite+":
+                    Utilities.ShowPopupWindow(
+                        "Invitation from " + notification.senderUsername,
+                        $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {instanceType}\n\nWanna go by yourself or drop a portal for the lads?",
+                        "Go Yourself",
+                        JoinYourself,
+                        "Drop Portal",
+                        DropPortal);
+                    break;
+                
+                default:
+                    Utilities.ShowPopupWindow(
+                        "Invitation from " + notification.senderUsername,
+                        $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {instanceType}\n\nPrivate Instance so can't drop a portal",
+                        "Join",
+                        JoinYourself);
+                    break;
+            }
+            
         }
 
         private static void DropPortal()
@@ -55,14 +76,24 @@ namespace AdvancedInvites
                             
                             Transform playerTransform = Utilities.GetLocalPlayerTransform();
 
-                            // CreatePortal (before il2cpp) and ignore portal successfully created as of now
-                            Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward, ShowAlerts);
+                            // CreatePortal (before il2cpp)
+                            bool created = Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward, ShowAlerts);
+                            if (created && RemoveNotifications)
+                            {
+                                Utilities.DeleteNotification(ref currentNotification);
+                                currentNotification = null;
+                            }
                         }));
         }
 
         private static void JoinYourself()
         {
             Utilities.CloseUi();
+            if (RemoveNotifications)
+            {
+                Utilities.DeleteNotification(ref currentNotification);
+                currentNotification = null;
+            }
             Networking.GoToRoom(worldInstance);
         }
 

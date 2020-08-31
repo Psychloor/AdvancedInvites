@@ -20,11 +20,15 @@ namespace AdvancedInvites
 
     using Transmtn.DTO.Notifications;
 
-    public class AdvancedInviteSystem : MelonMod
+    public sealed class AdvancedInviteSystem : MelonMod
     {
 
         public override void OnApplicationStart()
         {
+            MelonPrefs.RegisterCategory("AdvancedInvites", "Advanced Invites");
+            MelonPrefs.RegisterBool("AdvancedInvites", "RemoveNotifications", InviteHandler.RemoveNotifications, "Remove Notifications", true);
+            InviteHandler.RemoveNotifications = MelonPrefs.GetBool("AdvancedInvites", "RemoveNotifications");
+            
             try
             {
                 // Accept Notification
@@ -40,6 +44,12 @@ namespace AdvancedInvites
                 MelonLogger.LogError("Something went wrong patching: " + e.Message);
             }
         }
+
+        public override void OnModSettingsApplied()
+        {
+            InviteHandler.RemoveNotifications = MelonPrefs.GetBool("AdvancedInvites", "RemoveNotifications");
+        }
+
 
         private static bool AcceptNotificationPatch()
         {
