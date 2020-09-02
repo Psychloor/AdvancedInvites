@@ -21,7 +21,7 @@ namespace AdvancedInvites
     public static class Utilities
     {
 
-        private static MethodInfo[] closeUiMethods;
+        // private static MethodInfo[] closeUiMethods;
 
         private static CreatePortalDelegate ourCreatePortalDelegate;
 
@@ -51,7 +51,7 @@ namespace AdvancedInvites
             string button2,
             Action action2,
             Action<VRCUiPopup> onCreated = null);
-
+        
         private delegate void ShowPopupWindowSingleDelegate(string title, string content, string button, Action action, Action<VRCUiPopup> onCreated = null);
 
         private static CreatePortalDelegate GetCreatePortalDelegate
@@ -159,8 +159,10 @@ namespace AdvancedInvites
 
         // don't use this in your client if used for teleporting/moving your position. you'll get earraped
         // perfectly fine for closing ui in menues without that
-        public static void CloseUi()
+        public static void HideCurrentPopup()
         {
+            VRCUiManager.field_Protected_Static_VRCUiManager_0.HideScreen("POPUP");
+            /*
             // if null grab methods
             closeUiMethods ??= typeof(VRCUiManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(
                 m =>
@@ -181,7 +183,7 @@ namespace AdvancedInvites
                 catch
                 {
                     // ignored
-                }
+                }*/
         }
 
         public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts)

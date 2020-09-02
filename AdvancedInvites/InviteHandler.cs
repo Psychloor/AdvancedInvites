@@ -71,7 +71,7 @@ namespace AdvancedInvites
                 new Action<ApiContainer>(
                     container =>
                         {
-                            Utilities.CloseUi();
+                            Utilities.HideCurrentPopup();
                             ApiWorld apiWorld = container.Model.Cast<ApiWorld>();
                             ApiWorldInstance apiWorldInstance = new ApiWorldInstance(apiWorld, instanceIdWithTags, PlayerCount);
 
@@ -88,7 +88,7 @@ namespace AdvancedInvites
 
         private static void JoinYourself()
         {
-            Utilities.CloseUi();
+            Utilities.HideCurrentPopup();
             if (DeleteNotifications) Utilities.DeleteNotification(currentNotification);
             Networking.GoToRoom(worldInstance);
         }
