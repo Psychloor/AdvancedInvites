@@ -24,11 +24,12 @@ namespace AdvancedInvites
             currentNotification = notification;
             worldInstance = notification.details["worldId"].ToString();
 
-            var instanceType = "Public";
+            string instanceType;
             if (worldInstance.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Friends+";
             else if (worldInstance.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Friends Only";
             else if (worldInstance.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Invite+";
             else if (worldInstance.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Invite (Private)";
+            else instanceType = "Public";
 
             switch (instanceType)
             {
@@ -79,7 +80,10 @@ namespace AdvancedInvites
                             // CreatePortal (before il2cpp)
                             bool created = Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward, ShowAlerts);
                             if (created && RemoveNotifications) Utilities.DeleteNotification(currentNotification);
-                        }));
+                        }),
+
+                // On Failure
+                new Action<ApiContainer>(container => Utilities.ShowAlert("Error Fetching World", container.Error)));
         }
 
         private static void JoinYourself()

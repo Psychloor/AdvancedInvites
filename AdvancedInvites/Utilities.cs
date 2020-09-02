@@ -1,7 +1,6 @@
 namespace AdvancedInvites
 {
 
-    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
 
@@ -28,6 +27,8 @@ namespace AdvancedInvites
 
         private static RemoveNotificationDelegate ourRemoveNotificationDelegate;
 
+        private static ShowAlertDelegate ourShowAlertDelegate;
+
         private static ShowPopupWindowBothDelegate ourShowPopupWindowBothDelegate;
 
         private static ShowPopupWindowSingleDelegate ourShowPopupWindowSingleDelegate;
@@ -37,6 +38,8 @@ namespace AdvancedInvites
         private delegate void HideNotificationDelegate(Notification notification);
 
         private delegate void RemoveNotificationDelegate(Notification notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique timeEnum);
+
+        private delegate void ShowAlertDelegate(string title, string content, float timeOut);
 
         private delegate void ShowPopupWindowBothDelegate(
             string title,
@@ -56,12 +59,12 @@ namespace AdvancedInvites
                 if (ourCreatePortalDelegate != null) return ourCreatePortalDelegate;
 
                 MethodInfo portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static).First(
-                        m => m.ReturnType == typeof(bool) && m.HasParameters(
-                                 typeof(ApiWorld),
-                                 typeof(ApiWorldInstance),
-                                 typeof(Vector3),
-                                 typeof(Vector3),
-                                 typeof(bool)) && m.XRefScanFor("admin_dont_allow_portal"));
+                    m => m.ReturnType == typeof(bool) && m.HasParameters(
+                             typeof(ApiWorld),
+                             typeof(ApiWorldInstance),
+                             typeof(Vector3),
+                             typeof(Vector3),
+                             typeof(bool)) && m.XRefScanFor("admin_dont_allow_portal"));
 
                 ourCreatePortalDelegate = (CreatePortalDelegate)Delegate.CreateDelegate(typeof(CreatePortalDelegate), portalMethod);
                 return ourCreatePortalDelegate;
@@ -77,7 +80,7 @@ namespace AdvancedInvites
                 MethodInfo method = typeof(VRCWebSocketsManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
                     m => !m.IsAbstract && !m.IsVirtual && m.GetParameters().Length == 1
                          && m.GetParameters()[0].ParameterType == typeof(Notification)
-                         && m.XRefScanFor("Hide Notification:"));
+                         && m.XRefScanFor("HideNotification"));
 
                 ourHideNotificationDelegate = (HideNotificationDelegate)Delegate.CreateDelegate(
                     typeof(HideNotificationDelegate),
@@ -96,7 +99,7 @@ namespace AdvancedInvites
                 MethodInfo method = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
                     m => !m.IsAbstract && !m.IsVirtual && m.GetParameters().Length == 2
                          && m.GetParameters()[0].ParameterType == typeof(Notification)
-                         && m.XRefScanFor("Remove notification"));
+                         && m.GetParameters()[1].ParameterType.IsEnum);
 
                 ourRemoveNotificationDelegate = (RemoveNotificationDelegate)Delegate.CreateDelegate(
                     typeof(RemoveNotificationDelegate),
@@ -104,6 +107,21 @@ namespace AdvancedInvites
                     method);
 
                 return ourRemoveNotificationDelegate;
+            }
+        }
+
+        private static ShowAlertDelegate GetShowAlertDelegate
+        {
+            get
+            {
+                if (ourShowAlertDelegate != null) return ourShowAlertDelegate;
+                MethodInfo alertMethod = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                                                                  .First(m => m.GetParameters().Length == 3 && m.XRefScanFor("Popups/AlertPopup"));
+                ourShowAlertDelegate = (ShowAlertDelegate)Delegate.CreateDelegate(
+                    typeof(ShowAlertDelegate),
+                    VRCUiPopupManager.field_Private_Static_VRCUiPopupManager_0,
+                    alertMethod);
+                return ourShowAlertDelegate;
             }
         }
 
@@ -168,8 +186,8 @@ namespace AdvancedInvites
         {
             if (!notification.notificationType.Equals("voteToKick", StringComparison.OrdinalIgnoreCase)) GetHideNotificationDelegate(notification);
 
-            GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.AllTime);
-            GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.Recent);
+            // GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.AllTime);
+            // GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.Recent);
         }
 
         public static Notification GetCurrentActiveNotification()
@@ -180,6 +198,10 @@ namespace AdvancedInvites
         public static Transform GetLocalPlayerTransform()
         {
             return VRCPlayer.field_Internal_Static_VRCPlayer_0.transform;
+        }
+        public static void ShowAlert(string title, string content, float timeOut = 10f)
+        {
+            GetShowAlertDelegate(title, content, timeOut);
         }
 
         public static void ShowPopupWindow(
