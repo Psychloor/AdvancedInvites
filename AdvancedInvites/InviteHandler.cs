@@ -13,7 +13,7 @@ namespace AdvancedInvites
     public static class InviteHandler
     {
 
-        public static bool RemoveNotifications;
+        public static bool DeleteNotifications;
 
         private static Notification currentNotification;
 
@@ -79,7 +79,7 @@ namespace AdvancedInvites
 
                             // CreatePortal (before il2cpp)
                             bool created = Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward, ShowAlerts);
-                            if (created && RemoveNotifications) Utilities.DeleteNotification(currentNotification);
+                            if (created && DeleteNotifications) Utilities.DeleteNotification(currentNotification);
                         }),
 
                 // On Failure
@@ -89,7 +89,7 @@ namespace AdvancedInvites
         private static void JoinYourself()
         {
             Utilities.CloseUi();
-            if (RemoveNotifications) Utilities.DeleteNotification(currentNotification);
+            if (DeleteNotifications) Utilities.DeleteNotification(currentNotification);
             Networking.GoToRoom(worldInstance);
         }
 

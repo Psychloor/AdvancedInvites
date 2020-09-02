@@ -26,9 +26,9 @@ namespace AdvancedInvites
         public override void OnApplicationStart()
         {
             MelonPrefs.RegisterCategory("AdvancedInvites", "Advanced Invites");
-            
-            MelonPrefs.RegisterBool("AdvancedInvites", "HideNotifications", InviteHandler.RemoveNotifications, "Hide Used Notifications");
-            InviteHandler.RemoveNotifications = MelonPrefs.GetBool("AdvancedInvites", "HideNotifications");
+
+            MelonPrefs.RegisterBool("AdvancedInvites", "DeleteNotifications", InviteHandler.DeleteNotifications, "Delete Used Notifications");
+            InviteHandler.DeleteNotifications = MelonPrefs.GetBool("AdvancedInvites", "DeleteNotifications");
 
             try
             {
@@ -48,7 +48,7 @@ namespace AdvancedInvites
 
         public override void OnModSettingsApplied()
         {
-            InviteHandler.RemoveNotifications = MelonPrefs.GetBool("AdvancedInvites", "HideNotifications");
+            InviteHandler.DeleteNotifications = MelonPrefs.GetBool("AdvancedInvites", "DeleteNotifications");
         }
 
         private static bool AcceptNotificationPatch()

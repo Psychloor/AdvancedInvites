@@ -21,6 +21,8 @@ namespace AdvancedInvites
     public static class Utilities
     {
 
+        private static MethodInfo[] closeUiMethods;
+
         private static CreatePortalDelegate ourCreatePortalDelegate;
 
         private static HideNotificationDelegate ourHideNotificationDelegate;
@@ -57,7 +59,6 @@ namespace AdvancedInvites
             get
             {
                 if (ourCreatePortalDelegate != null) return ourCreatePortalDelegate;
-
                 MethodInfo portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static).First(
                     m => m.ReturnType == typeof(bool) && m.HasParameters(
                              typeof(ApiWorld),
@@ -65,7 +66,6 @@ namespace AdvancedInvites
                              typeof(Vector3),
                              typeof(Vector3),
                              typeof(bool)) && m.XRefScanFor("admin_dont_allow_portal"));
-
                 ourCreatePortalDelegate = (CreatePortalDelegate)Delegate.CreateDelegate(typeof(CreatePortalDelegate), portalMethod);
                 return ourCreatePortalDelegate;
             }
@@ -95,7 +95,7 @@ namespace AdvancedInvites
         {
             get
             {
-                if (ourCreatePortalDelegate != null) return ourRemoveNotificationDelegate;
+                if (ourRemoveNotificationDelegate != null) return ourRemoveNotificationDelegate;
                 MethodInfo method = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
                     m => !m.IsAbstract && !m.IsVirtual && m.GetParameters().Length == 2
                          && m.GetParameters()[0].ParameterType == typeof(Notification)
@@ -161,12 +161,19 @@ namespace AdvancedInvites
         // perfectly fine for closing ui in menues without that
         public static void CloseUi()
         {
-            foreach (MethodInfo methodInfo in typeof(VRCUiManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(
+            // if null grab methods
+            closeUiMethods ??= typeof(VRCUiManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(
                 m =>
                     {
-                        if (!m.Name.StartsWith("Method_Public_Void_Boolean_")) return false;
-                        return m.GetParameters().Length == 1 && m.GetParameters()[0].HasDefaultValue;
-                    }))
+                        if (m.IsAbstract
+                            || m.IsVirtual) return false;
+                        if (m.ReturnType != typeof(void)) return false;
+                        ParameterInfo[] parameters = m.GetParameters();
+                        return parameters.Length == 1 && parameters[0].ParameterType == typeof(bool)
+                                                      && parameters[0].HasDefaultValue;
+                    }).ToArray();
+
+            foreach (MethodInfo methodInfo in closeUiMethods)
                 try
                 {
                     methodInfo.Invoke(VRCUiManager.prop_VRCUiManager_0, new object[] { false });
@@ -186,8 +193,9 @@ namespace AdvancedInvites
         {
             if (!notification.notificationType.Equals("voteToKick", StringComparison.OrdinalIgnoreCase)) GetHideNotificationDelegate(notification);
 
-            // GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.AllTime);
-            // GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.Recent);
+            // Currently not working
+            GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.AllTime);
+            GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.Recent);
         }
 
         public static Notification GetCurrentActiveNotification()

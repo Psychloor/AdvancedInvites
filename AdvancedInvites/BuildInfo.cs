@@ -12,7 +12,8 @@ namespace AdvancedInvites
 
         public const string Name = "Advanced Invites";
 
-        public const string Version = "1.1.0";
+        // 1.2.0 hide notification and single popup for private instances... and the delegates!
+        public const string Version = "1.2.0";
 
     }
 
