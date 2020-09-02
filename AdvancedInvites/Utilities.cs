@@ -192,8 +192,7 @@ namespace AdvancedInvites
         public static void DeleteNotification(Notification notification)
         {
             if (!notification.notificationType.Equals("voteToKick", StringComparison.OrdinalIgnoreCase)) GetHideNotificationDelegate(notification);
-
-            // Currently not working
+            
             GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.AllTime);
             GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.Recent);
         }
