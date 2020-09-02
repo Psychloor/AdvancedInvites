@@ -27,7 +27,7 @@ namespace AdvancedInvites
         {
             MelonPrefs.RegisterCategory("AdvancedInvites", "Advanced Invites");
 
-            MelonPrefs.RegisterBool("AdvancedInvites", "DeleteNotifications", InviteHandler.DeleteNotifications, "Delete Used Notifications");
+            MelonPrefs.RegisterBool("AdvancedInvites", "DeleteNotifications", InviteHandler.DeleteNotifications, "Delete Notification After Successful Use");
             InviteHandler.DeleteNotifications = MelonPrefs.GetBool("AdvancedInvites", "DeleteNotifications");
 
             try
