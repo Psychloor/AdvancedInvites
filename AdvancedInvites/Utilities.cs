@@ -6,6 +6,8 @@ namespace AdvancedInvites
 
     using Il2CppSystem;
 
+    using MelonLoader;
+
     using Transmtn.DTO.Notifications;
 
     using UnhollowerRuntimeLib.XrefScans;
@@ -14,20 +16,18 @@ namespace AdvancedInvites
 
     using VRC.Core;
 
+    using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
     using Delegate = System.Delegate;
+    using Exception = System.Exception;
     using StringComparison = System.StringComparison;
     using Type = System.Type;
 
     public static class Utilities
     {
 
-        // private static MethodInfo[] closeUiMethods;
-
         private static CreatePortalDelegate ourCreatePortalDelegate;
 
-        private static HideNotificationDelegate ourHideNotificationDelegate;
-
-        private static RemoveNotificationDelegate ourRemoveNotificationDelegate;
+        private static DeleteNotificationDelegate ourDeleteNotificationDelegate;
 
         private static ShowAlertDelegate ourShowAlertDelegate;
 
@@ -37,9 +37,7 @@ namespace AdvancedInvites
 
         private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts);
 
-        private delegate void HideNotificationDelegate(Notification notification);
-
-        private delegate void RemoveNotificationDelegate(Notification notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique timeEnum);
+        private delegate void DeleteNotificationDelegate(Notification notification);
 
         private delegate void ShowAlertDelegate(string title, string content, float timeOut);
 
@@ -51,7 +49,7 @@ namespace AdvancedInvites
             string button2,
             Action action2,
             Action<VRCUiPopup> onCreated = null);
-        
+
         private delegate void ShowPopupWindowSingleDelegate(string title, string content, string button, Action action, Action<VRCUiPopup> onCreated = null);
 
         private static CreatePortalDelegate GetCreatePortalDelegate
@@ -71,42 +69,44 @@ namespace AdvancedInvites
             }
         }
 
-        private static HideNotificationDelegate GetHideNotificationDelegate
+        public static ApiWorldInstance.AccessType GetAccessType(string tags)
         {
-            get
-            {
-                if (ourHideNotificationDelegate != null) return ourHideNotificationDelegate;
-
-                MethodInfo method = typeof(VRCWebSocketsManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                    m => !m.IsAbstract && !m.IsVirtual && m.GetParameters().Length == 1
-                         && m.GetParameters()[0].ParameterType == typeof(Notification)
-                         && m.XRefScanFor("HideNotification"));
-
-                ourHideNotificationDelegate = (HideNotificationDelegate)Delegate.CreateDelegate(
-                    typeof(HideNotificationDelegate),
-                    VRCWebSocketsManager.field_Private_Static_VRCWebSocketsManager_0,
-                    method);
-
-                return ourHideNotificationDelegate;
-            }
+            if (tags.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.FriendsOfGuests;
+            if (tags.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.FriendsOnly;
+            if (tags.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.InvitePlus;
+            return tags.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0 ? ApiWorldInstance.AccessType.InviteOnly : ApiWorldInstance.AccessType.Public;
+        }
+        
+        public static string GetAccessName(ApiWorldInstance.AccessType accessType)
+        {
+            // Switch expression. yes c# 8 works in MelonLoader as it compiles differently
+            return accessType switch
+                {
+                    ApiWorldInstance.AccessType.Public => "Public",
+                    ApiWorldInstance.AccessType.FriendsOfGuests => "Friends+",
+                    ApiWorldInstance.AccessType.FriendsOnly => "Friends Only",
+                    ApiWorldInstance.AccessType.InviteOnly => "Invite Only",
+                    ApiWorldInstance.AccessType.InvitePlus => "Invite+",
+                    ApiWorldInstance.AccessType.Counter => "Coun... wait wut?",
+                    _ => throw new ArgumentOutOfRangeException(nameof(accessType), accessType, "what the fuck happened?")
+                };
         }
 
-        private static RemoveNotificationDelegate GetRemoveNotificationDelegate
+        private static DeleteNotificationDelegate GetDeleteNotificationDelegate
         {
             get
             {
-                if (ourRemoveNotificationDelegate != null) return ourRemoveNotificationDelegate;
-                MethodInfo method = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                    m => !m.IsAbstract && !m.IsVirtual && m.GetParameters().Length == 2
-                         && m.GetParameters()[0].ParameterType == typeof(Notification)
-                         && m.GetParameters()[1].ParameterType.IsEnum);
+                if (ourDeleteNotificationDelegate != null) return ourDeleteNotificationDelegate;
 
-                ourRemoveNotificationDelegate = (RemoveNotificationDelegate)Delegate.CreateDelegate(
-                    typeof(RemoveNotificationDelegate),
+                MethodInfo deleteMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
+                    m => m.XRefScanFor("voteToKick") && m.XRefScanForMethod(null, nameof(VRCWebSocketsManager))
+                                                     && m.XRefScanMethodCount(null, nameof(NotificationManager))
+                                                     == 2);
+                ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
+                    typeof(DeleteNotificationDelegate),
                     NotificationManager.field_Private_Static_NotificationManager_0,
-                    method);
-
-                return ourRemoveNotificationDelegate;
+                    deleteMethod);
+                return ourDeleteNotificationDelegate;
             }
         }
 
@@ -157,35 +157,6 @@ namespace AdvancedInvites
             }
         }
 
-        // don't use this in your client if used for teleporting/moving your position. you'll get earraped
-        // perfectly fine for closing ui in menues without that
-        public static void HideCurrentPopup()
-        {
-            VRCUiManager.field_Protected_Static_VRCUiManager_0.HideScreen("POPUP");
-            /*
-            // if null grab methods
-            closeUiMethods ??= typeof(VRCUiManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(
-                m =>
-                    {
-                        if (m.IsAbstract
-                            || m.IsVirtual) return false;
-                        if (m.ReturnType != typeof(void)) return false;
-                        ParameterInfo[] parameters = m.GetParameters();
-                        return parameters.Length == 1 && parameters[0].ParameterType == typeof(bool)
-                                                      && parameters[0].HasDefaultValue;
-                    }).ToArray();
-
-            foreach (MethodInfo methodInfo in closeUiMethods)
-                try
-                {
-                    methodInfo.Invoke(VRCUiManager.prop_VRCUiManager_0, new object[] { false });
-                }
-                catch
-                {
-                    // ignored
-                }*/
-        }
-
         public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts)
         {
             return GetCreatePortalDelegate(apiWorld, apiWorldInstance, position, forward, showAlerts);
@@ -193,10 +164,7 @@ namespace AdvancedInvites
 
         public static void DeleteNotification(Notification notification)
         {
-            if (!notification.notificationType.Equals("voteToKick", StringComparison.OrdinalIgnoreCase)) GetHideNotificationDelegate(notification);
-            
-            GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.AllTime);
-            GetRemoveNotificationDelegate(notification, NotificationManager.EnumNPublicSealedvaAlReLo4vUnique.Recent);
+            GetDeleteNotificationDelegate(notification);
         }
 
         public static Notification GetCurrentActiveNotification()
@@ -207,6 +175,11 @@ namespace AdvancedInvites
         public static Transform GetLocalPlayerTransform()
         {
             return VRCPlayer.field_Internal_Static_VRCPlayer_0.transform;
+        }
+        
+        public static void HideCurrentPopup()
+        {
+            VRCUiManager.field_Protected_Static_VRCUiManager_0.HideScreen("POPUP");
         }
         public static void ShowAlert(string title, string content, float timeOut = 10f)
         {
@@ -248,6 +221,76 @@ namespace AdvancedInvites
                     return false;
 
             return true;
+        }
+
+        private static bool XRefScanForMethod(this MethodBase methodBase, string methodName = null, string parentType = null, bool ignoreCase = true)
+        {
+            if (!string.IsNullOrEmpty(methodName)
+                || !string.IsNullOrEmpty(parentType))
+                return XrefScanner.XrefScan(methodBase).Any(
+                    xref =>
+                        {
+                            if (xref.Type != XrefType.Method) return false;
+
+                            var found = false;
+                            MethodBase resolved = xref.TryResolve();
+                            if (resolved == null) return false;
+
+                            if (!string.IsNullOrEmpty(methodName))
+                                found = !string.IsNullOrEmpty(resolved.Name) && resolved.Name.IndexOf(
+                                            methodName,
+                                            ignoreCase
+                                                ? StringComparison.OrdinalIgnoreCase
+                                                : StringComparison.Ordinal) >= 0;
+
+                            if (!string.IsNullOrEmpty(parentType))
+                                found = !string.IsNullOrEmpty(resolved.ReflectedType?.Name) && resolved.ReflectedType.Name.IndexOf(
+                                            parentType,
+                                            ignoreCase
+                                                ? StringComparison
+                                                    .OrdinalIgnoreCase
+                                                : StringComparison.Ordinal)
+                                        >= 0;
+
+                            return found;
+                        });
+            MelonLogger.LogWarning($"XRefScanForMethod \"{methodBase}\" has all null/empty parameters. Returning false");
+            return false;
+        }
+
+        private static int XRefScanMethodCount(this MethodBase methodBase, string methodName = null, string parentType = null, bool ignoreCase = true)
+        {
+            if (!string.IsNullOrEmpty(methodName)
+                || !string.IsNullOrEmpty(parentType))
+                return XrefScanner.XrefScan(methodBase).Count(
+                    xref =>
+                        {
+                            if (xref.Type != XrefType.Method) return false;
+
+                            var found = false;
+                            MethodBase resolved = xref.TryResolve();
+                            if (resolved == null) return false;
+
+                            if (!string.IsNullOrEmpty(methodName))
+                                found = !string.IsNullOrEmpty(resolved.Name) && resolved.Name.IndexOf(
+                                            methodName,
+                                            ignoreCase
+                                                ? StringComparison.OrdinalIgnoreCase
+                                                : StringComparison.Ordinal) >= 0;
+
+                            if (!string.IsNullOrEmpty(parentType))
+                                found = !string.IsNullOrEmpty(resolved.ReflectedType?.Name) && resolved.ReflectedType.Name.IndexOf(
+                                            parentType,
+                                            ignoreCase
+                                                ? StringComparison
+                                                    .OrdinalIgnoreCase
+                                                : StringComparison.Ordinal)
+                                        >= 0;
+
+                            return found;
+                        });
+            MelonLogger.LogWarning($"XRefScanMethodCount \"{methodBase}\" has all null/empty parameters. Returning -1");
+            return -1;
         }
 
     }

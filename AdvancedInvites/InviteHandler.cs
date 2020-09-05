@@ -24,33 +24,32 @@ namespace AdvancedInvites
             currentNotification = notification;
             worldInstance = notification.details["worldId"].ToString();
 
-            string instanceType;
-            if (worldInstance.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Friends+";
-            else if (worldInstance.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Friends Only";
-            else if (worldInstance.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Invite+";
-            else if (worldInstance.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0) instanceType = "Invite (Private)";
-            else instanceType = "Public";
-
-            switch (instanceType)
+            ApiWorldInstance.AccessType accessType = Utilities.GetAccessType(worldInstance.Split(':')[1]);
+            switch (accessType)
             {
-                case "Public":
-                case "Friends+":
-                case "Invite+":
+                case ApiWorldInstance.AccessType.Public:
+                case ApiWorldInstance.AccessType.FriendsOfGuests:
+                case ApiWorldInstance.AccessType.InvitePlus:
                     Utilities.ShowPopupWindow(
                         "Invitation from " + notification.senderUsername,
-                        $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {instanceType}\n\nWanna go by yourself or drop a portal for the lads?",
+                        $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {Utilities.GetAccessName(accessType)}\n\nWanna go by yourself or drop a portal for the lads?",
                         "Go Yourself",
                         JoinYourself,
                         "Drop Portal",
                         DropPortal);
                     break;
 
-                default:
+                case ApiWorldInstance.AccessType.FriendsOnly:
+                case ApiWorldInstance.AccessType.InviteOnly:
                     Utilities.ShowPopupWindow(
                         "Invitation from " + notification.senderUsername,
-                        $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {instanceType}\n\nPrivate Instance so can't drop a portal",
+                        $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {Utilities.GetAccessName(accessType)}\n\nPrivate Instance so can't drop a portal",
                         "Join",
                         JoinYourself);
+                    break;
+
+                case ApiWorldInstance.AccessType.Counter:
+                default:
                     break;
             }
         }
