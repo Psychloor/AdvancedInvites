@@ -47,9 +47,9 @@ namespace AdvancedInvites
                         "Join",
                         JoinYourself);
                     break;
-
-                case ApiWorldInstance.AccessType.Counter:
+                
                 default:
+                    Utilities.ShowAlert("Error Getting AccessType", "Did you accept a message?");
                     break;
             }
         }
