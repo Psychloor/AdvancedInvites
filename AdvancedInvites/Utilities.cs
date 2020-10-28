@@ -35,6 +35,21 @@ namespace AdvancedInvites
 
         private static ShowPopupWindowSingleDelegate ourShowPopupWindowSingleDelegate;
 
+        private static VRCUiManagerDelegate ourVRCUiManagerDelegate;
+
+        internal delegate VRCUiManager VRCUiManagerDelegate();
+
+        internal static VRCUiManagerDelegate GetVRCUiManager
+        {
+            get
+            {
+                if (ourVRCUiManagerDelegate != null) return ourVRCUiManagerDelegate;
+                MethodInfo vrcUiManagerInstance = typeof(VRCUiManager).GetMethods().First(x => x.ReturnType == typeof(VRCUiManager));
+                ourVRCUiManagerDelegate = (VRCUiManagerDelegate)Delegate.CreateDelegate(typeof(VRCUiManagerDelegate), vrcUiManagerInstance);
+                return ourVRCUiManagerDelegate;
+            }
+        }
+
         private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts);
 
         private delegate void DeleteNotificationDelegate(Notification notification);
@@ -179,7 +194,7 @@ namespace AdvancedInvites
         
         public static void HideCurrentPopup()
         {
-            VRCUiManager.field_Protected_Static_VRCUiManager_0.HideScreen("POPUP");
+            GetVRCUiManager().HideScreen("POPUP");
         }
         public static void ShowAlert(string title, string content, float timeOut = 10f)
         {

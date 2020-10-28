@@ -44,6 +44,8 @@ namespace AdvancedInvites
             {
                 MelonLogger.LogError("Something went wrong patching: " + e.Message);
             }
+
+
         }
 
         public override void OnModSettingsApplied()
