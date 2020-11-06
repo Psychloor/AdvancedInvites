@@ -11,6 +11,7 @@ namespace AdvancedInvites
 {
 
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
 
@@ -19,6 +20,8 @@ namespace AdvancedInvites
     using MelonLoader;
 
     using Transmtn.DTO.Notifications;
+
+    using UnhollowerRuntimeLib.XrefScans;
 
     public sealed class AdvancedInviteSystem : MelonMod
     {
@@ -42,15 +45,86 @@ namespace AdvancedInvites
             }
             catch (Exception e)
             {
-                MelonLogger.LogError("Something went wrong patching: " + e.Message);
+                MelonLogger.LogError("Error Patching AcceptNotification: " + e.Message);
             }
 
+            try
+            {
+                // AddNotification - Method_Public_Void_Notification_EnumNPublicSealedvaAlReLo4vUnique_PDM_0 as of build 1010
+                // Also seems to be the first one each time more
+                MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
+                    m =>
+                        {
+                            if (!m.Name.StartsWith("Method_Public_Void_Notification_Enum")
+                                || m.GetParameters().Length != 2
+                                || m.GetParameters()[0].ParameterType != typeof(Notification)) return false;
 
+                            return XrefScanner.XrefScan(m).All(xrefInstance => xrefInstance.Type != XrefType.Global);
+                        });
+
+                harmonyInstance.Patch(
+                    addNotificationMethod,
+                    postfix: new HarmonyMethod(
+                        typeof(AdvancedInviteSystem).GetMethod(nameof(AddNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
+            }
+            catch (Exception e)
+            {
+                MelonLogger.LogError("Error Patching AddNotification: " + e.Message);
+            }
+
+            PermissionHandler.LoadSettings();
         }
 
         public override void OnModSettingsApplied()
         {
             InviteHandler.DeleteNotifications = MelonPrefs.GetBool("AdvancedInvites", "DeleteNotifications");
+        }
+
+        private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
+        
+        // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
+        private static void AddNotificationPatch(Notification __0)
+        {
+            if (__0 == null) return;
+
+            switch (__0.notificationType.ToLowerInvariant())
+            {
+                case "invite":
+                    if (HandledNotifications.Contains(__0.id)) return;
+                    HandledNotifications.Add(__0.id);
+                    
+                    if (!PermissionHandler.IsBlacklisted(__0.senderUserId)) return;
+                    Utilities.DeleteNotification(__0);
+                    return;
+
+                case "requestinvite":
+                    if (HandledNotifications.Contains(__0.id)) return;
+                    HandledNotifications.Add(__0.id);
+                    
+                    if (PermissionHandler.IsBlacklisted(__0.senderUserId))
+                    {
+                        Utilities.DeleteNotification(__0);
+                        return;
+                    }
+                    
+                    if (!PermissionHandler.IsWhitelisted(__0.senderUserId)) return;
+                    if (!Utilities.AllowedToInvite()) return;
+
+                    if (__0.details != null
+                        && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
+                    {
+                        Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
+                        Utilities.DeleteNotification(__0);
+                        return;
+                    }
+
+                    Utilities.AcceptInviteRequest(__0.senderUserId);
+                    Utilities.DeleteNotification(__0);
+                    return;
+
+                default:
+                    return;
+            }
         }
 
         private static bool AcceptNotificationPatch()

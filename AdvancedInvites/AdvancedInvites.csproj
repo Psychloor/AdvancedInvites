@@ -48,6 +48,9 @@
         <Reference Include="MelonLoader.ModHandler, Version=0.2.6.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\MelonLoader.ModHandler.dll</HintPath>
         </Reference>
+        <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+          <HintPath>..\..\..\Omenous\Libs\Newtonsoft.Json.dll</HintPath>
+        </Reference>
         <Reference Include="System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\System.IO.Compression.dll</HintPath>
         </Reference>
@@ -80,6 +83,7 @@
         <Compile Include="BuildInfo.cs" />
         <Compile Include="AdvancedInviteSystem.cs" />
         <Compile Include="InviteHandler.cs" />
+        <Compile Include="PermissionHandler.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="Utilities.cs" />
     </ItemGroup>

@@ -47,7 +47,7 @@ namespace AdvancedInvites
                         "Join",
                         JoinYourself);
                     break;
-                
+
                 default:
                     Utilities.ShowAlert("Error Getting AccessType", "Did you accept a message?");
                     break;

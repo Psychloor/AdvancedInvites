@@ -1,10 +1,9 @@
 namespace AdvancedInvites
 {
 
+    using System;
     using System.Linq;
     using System.Reflection;
-
-    using Il2CppSystem;
 
     using MelonLoader;
 
@@ -15,15 +14,14 @@ namespace AdvancedInvites
     using UnityEngine;
 
     using VRC.Core;
+    using VRC.UI;
 
-    using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
-    using Delegate = System.Delegate;
-    using Exception = System.Exception;
-    using StringComparison = System.StringComparison;
-    using Type = System.Type;
+    using Boolean = Il2CppSystem.Boolean;
 
     public static class Utilities
     {
+
+        public delegate void SendNotificationDelegate(string receiverUserId, string notificationType, string message, NotificationDetails notificationDetails);
 
         private static CreatePortalDelegate ourCreatePortalDelegate;
 
@@ -37,7 +35,41 @@ namespace AdvancedInvites
 
         private static VRCUiManagerDelegate ourVRCUiManagerDelegate;
 
-        internal delegate VRCUiManager VRCUiManagerDelegate();
+        private static SendNotificationDelegate ourSendNotificationDelegate;
+
+        public static SendNotificationDelegate SendNotification
+        {
+            get
+            {
+                if (ourSendNotificationDelegate != null) return ourSendNotificationDelegate;
+
+                // Scan for the method used by invite friend
+                MethodInfo inviteFriendMethod = typeof(PageUserInfo).GetMethod(nameof(PageUserInfo.InviteFriend), BindingFlags.Public | BindingFlags.Instance);
+                foreach (XrefInstance xrefInstance in XrefScanner.XrefScan(inviteFriendMethod))
+                {
+                    if (xrefInstance.Type != XrefType.Method) continue;
+                    MethodBase resolved = xrefInstance.TryResolve();
+                    if (resolved == null) continue;
+
+                    if (string.IsNullOrEmpty(resolved.Name)) continue;
+                    if (resolved.ReflectedType == null) continue;
+                    if (resolved.ReflectedType != typeof(NotificationManager)) continue;
+
+                    MethodInfo sendNotificationMethod = typeof(NotificationManager).GetMethod(resolved.Name, BindingFlags.Public | BindingFlags.Instance);
+                    if (sendNotificationMethod == null) continue;
+                    if (!sendNotificationMethod.HasParameters(typeof(string), typeof(string), typeof(string), typeof(NotificationDetails))) continue;
+
+                    ourSendNotificationDelegate = (SendNotificationDelegate)Delegate.CreateDelegate(
+                        typeof(SendNotificationDelegate),
+                        NotificationManager.prop_NotificationManager_0,
+                        sendNotificationMethod);
+                    return ourSendNotificationDelegate;
+                }
+
+                MelonLogger.LogError("Failed to find SendNotification Method");
+                return null;
+            }
+        }
 
         internal static VRCUiManagerDelegate GetVRCUiManager
         {
@@ -49,23 +81,6 @@ namespace AdvancedInvites
                 return ourVRCUiManagerDelegate;
             }
         }
-
-        private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts);
-
-        private delegate void DeleteNotificationDelegate(Notification notification);
-
-        private delegate void ShowAlertDelegate(string title, string content, float timeOut);
-
-        private delegate void ShowPopupWindowBothDelegate(
-            string title,
-            string content,
-            string button1,
-            Action action,
-            string button2,
-            Action action2,
-            Action<VRCUiPopup> onCreated = null);
-
-        private delegate void ShowPopupWindowSingleDelegate(string title, string content, string button, Action action, Action<VRCUiPopup> onCreated = null);
 
         private static CreatePortalDelegate GetCreatePortalDelegate
         {
@@ -84,29 +99,6 @@ namespace AdvancedInvites
             }
         }
 
-        public static ApiWorldInstance.AccessType GetAccessType(string tags)
-        {
-            if (tags.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.FriendsOfGuests;
-            if (tags.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.FriendsOnly;
-            if (tags.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.InvitePlus;
-            return tags.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0 ? ApiWorldInstance.AccessType.InviteOnly : ApiWorldInstance.AccessType.Public;
-        }
-        
-        public static string GetAccessName(ApiWorldInstance.AccessType accessType)
-        {
-            // Switch expression. yes c# 8 works in MelonLoader as it compiles differently
-            return accessType switch
-                {
-                    ApiWorldInstance.AccessType.Public => "Public",
-                    ApiWorldInstance.AccessType.FriendsOfGuests => "Friends+",
-                    ApiWorldInstance.AccessType.FriendsOnly => "Friends Only",
-                    ApiWorldInstance.AccessType.InviteOnly => "Invite Only",
-                    ApiWorldInstance.AccessType.InvitePlus => "Invite+",
-                    ApiWorldInstance.AccessType.Counter => "Coun... wait wut?",
-                    _ => throw new ArgumentOutOfRangeException(nameof(accessType), accessType, "what the fuck happened?")
-                };
-        }
-
         private static DeleteNotificationDelegate GetDeleteNotificationDelegate
         {
             get
@@ -115,8 +107,7 @@ namespace AdvancedInvites
 
                 MethodInfo deleteMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
                     m => m.XRefScanFor("voteToKick") && m.XRefScanForMethod(null, nameof(VRCWebSocketsManager))
-                                                     && m.XRefScanMethodCount(null, nameof(NotificationManager))
-                                                     == 2);
+                                                     && m.XRefScanMethodCount(null, nameof(NotificationManager)) == 2);
                 ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
                     typeof(DeleteNotificationDelegate),
                     NotificationManager.field_Private_Static_NotificationManager_0,
@@ -172,6 +163,84 @@ namespace AdvancedInvites
             }
         }
 
+        public static ApiWorldInstance.AccessType GetAccessType(string tags)
+        {
+            if (tags.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.FriendsOfGuests;
+            if (tags.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.FriendsOnly;
+            if (tags.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.InvitePlus;
+            return tags.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0
+                       ? ApiWorldInstance.AccessType.InviteOnly
+                       : ApiWorldInstance.AccessType.Public;
+        }
+
+        public static string GetAccessName(ApiWorldInstance.AccessType accessType)
+        {
+            // Switch expression. yes c# 8 works in MelonLoader as it compiles differently
+            return accessType switch
+                {
+                    ApiWorldInstance.AccessType.Public => "Public",
+                    ApiWorldInstance.AccessType.FriendsOfGuests => "Friends+",
+                    ApiWorldInstance.AccessType.FriendsOnly => "Friends Only",
+                    ApiWorldInstance.AccessType.InviteOnly => "Invite Only",
+                    ApiWorldInstance.AccessType.InvitePlus => "Invite+",
+                    ApiWorldInstance.AccessType.Counter => "Coun... wait wut?",
+                    _ => throw new ArgumentOutOfRangeException(nameof(accessType), accessType, "what the fuck happened?")
+                };
+        }
+        
+        // Don't ask alright. either i'm too tired or this is too weird.
+        // Taken directly from older vrchat source
+        public static bool IsPlatformCompatibleWithCurrentWorld(string platform)
+        {
+            if (RoomManager.field_Internal_Static_ApiWorld_0 == null)
+            {
+                return false;
+            }
+            bool notUsingAndroid = !string.IsNullOrEmpty(platform) && platform.Contains("android");
+            if (RoomManager.field_Internal_Static_ApiWorld_0.supportedPlatforms == ApiModel.SupportedPlatforms.Android && !notUsingAndroid) return false;
+            return RoomManager.field_Internal_Static_ApiWorld_0.supportedPlatforms != ApiModel.SupportedPlatforms.StandaloneWindows || !notUsingAndroid;
+        }
+
+        public static void AcceptInviteRequest(string receiverUserId)
+        {
+            ApiWorld currentRoom = RoomManager.field_Internal_Static_ApiWorld_0;
+            NotificationDetails details = new NotificationDetails
+                                              {
+                                                  ["worldId"] = $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}",
+                                                  ["rsvp"] = new Boolean { m_value = true }.BoxIl2CppObject(),
+                                                  ["worldName"] = currentRoom.name
+                                              };
+
+            SendNotification(receiverUserId, "invite", string.Empty, details);
+        }
+
+        public static void SendIncompatiblePlatformNotification(string receiverUserId)
+        {
+            NotificationDetails details = new NotificationDetails
+                                              {
+                                                  ["incompatible"] = new Boolean { m_value = true }.BoxIl2CppObject(),
+                                                  ["rsvp"] = new Boolean { m_value = true }.BoxIl2CppObject()
+                                              };
+
+            SendNotification(receiverUserId, "invite", string.Empty, details);
+        }
+
+        public static bool AllowedToInvite()
+        {
+            if (RoomManager.field_Internal_Static_ApiWorldInstance_0.GetInstanceCreator().Equals(APIUser.CurrentUser.id, StringComparison.Ordinal)) return true;
+            return GetAccessType(RoomManager.field_Internal_Static_ApiWorld_0.currentInstanceIdWithTags) switch
+                {
+                    ApiWorldInstance.AccessType.Public          => true,
+                    ApiWorldInstance.AccessType.FriendsOfGuests => true,
+                    ApiWorldInstance.AccessType.InvitePlus      => true,
+
+                    // Not instance owner so no
+                    ApiWorldInstance.AccessType.FriendsOnly => false,
+                    ApiWorldInstance.AccessType.InviteOnly  => false,
+                    _                                       => true
+                };
+        }
+
         public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts)
         {
             return GetCreatePortalDelegate(apiWorld, apiWorldInstance, position, forward, showAlerts);
@@ -191,7 +260,7 @@ namespace AdvancedInvites
         {
             return VRCPlayer.field_Internal_Static_VRCPlayer_0.transform;
         }
-        
+
         public static void HideCurrentPopup()
         {
             GetVRCUiManager().HideScreen("POPUP");
@@ -205,15 +274,15 @@ namespace AdvancedInvites
             string title,
             string content,
             string button1,
-            System.Action action,
+            Action action,
             string button2,
-            System.Action action2,
-            System.Action<VRCUiPopup> onCreated = null)
+            Action action2,
+            Action<VRCUiPopup> onCreated = null)
         {
             GetShowPopupWindowBothDelegate(title, content, button1, action, button2, action2, onCreated);
         }
 
-        public static void ShowPopupWindow(string title, string content, string button1, System.Action action, System.Action<VRCUiPopup> onCreated = null)
+        public static void ShowPopupWindow(string title, string content, string button1, Action action, Action<VRCUiPopup> onCreated = null)
         {
             GetShowPopupWindowSingleDelegate(title, content, button1, action, onCreated);
         }
@@ -221,8 +290,7 @@ namespace AdvancedInvites
         public static bool XRefScanFor(this MethodBase methodBase, string searchTerm)
         {
             return XrefScanner.XrefScan(methodBase).Any(
-                xref => xref.Type == XrefType.Global
-                        && xref.ReadAsObject()?.ToString().IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0);
+                xref => xref.Type == XrefType.Global && xref.ReadAsObject()?.ToString().IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         private static bool HasParameters(this MethodBase methodBase, params Type[] types)
@@ -254,18 +322,12 @@ namespace AdvancedInvites
                             if (!string.IsNullOrEmpty(methodName))
                                 found = !string.IsNullOrEmpty(resolved.Name) && resolved.Name.IndexOf(
                                             methodName,
-                                            ignoreCase
-                                                ? StringComparison.OrdinalIgnoreCase
-                                                : StringComparison.Ordinal) >= 0;
+                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
 
                             if (!string.IsNullOrEmpty(parentType))
                                 found = !string.IsNullOrEmpty(resolved.ReflectedType?.Name) && resolved.ReflectedType.Name.IndexOf(
                                             parentType,
-                                            ignoreCase
-                                                ? StringComparison
-                                                    .OrdinalIgnoreCase
-                                                : StringComparison.Ordinal)
-                                        >= 0;
+                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
 
                             return found;
                         });
@@ -289,24 +351,42 @@ namespace AdvancedInvites
                             if (!string.IsNullOrEmpty(methodName))
                                 found = !string.IsNullOrEmpty(resolved.Name) && resolved.Name.IndexOf(
                                             methodName,
-                                            ignoreCase
-                                                ? StringComparison.OrdinalIgnoreCase
-                                                : StringComparison.Ordinal) >= 0;
+                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
 
                             if (!string.IsNullOrEmpty(parentType))
                                 found = !string.IsNullOrEmpty(resolved.ReflectedType?.Name) && resolved.ReflectedType.Name.IndexOf(
                                             parentType,
-                                            ignoreCase
-                                                ? StringComparison
-                                                    .OrdinalIgnoreCase
-                                                : StringComparison.Ordinal)
-                                        >= 0;
+                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
 
                             return found;
                         });
             MelonLogger.LogWarning($"XRefScanMethodCount \"{methodBase}\" has all null/empty parameters. Returning -1");
             return -1;
         }
+
+        internal delegate VRCUiManager VRCUiManagerDelegate();
+
+        private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts);
+
+        private delegate void DeleteNotificationDelegate(Notification notification);
+
+        private delegate void ShowAlertDelegate(string title, string content, float timeOut);
+
+        private delegate void ShowPopupWindowBothDelegate(
+            string title,
+            string content,
+            string button1,
+            Il2CppSystem.Action action,
+            string button2,
+            Il2CppSystem.Action action2,
+            Il2CppSystem.Action<VRCUiPopup> onCreated = null);
+
+        private delegate void ShowPopupWindowSingleDelegate(
+            string title,
+            string content,
+            string button,
+            Il2CppSystem.Action action,
+            Il2CppSystem.Action<VRCUiPopup> onCreated = null);
 
     }
 
