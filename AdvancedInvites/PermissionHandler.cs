@@ -69,9 +69,9 @@ namespace AdvancedInvites
             if (!Directory.Exists("UserData/AdvancedInvites")) Directory.CreateDirectory("UserData/AdvancedInvites");
 
             if (!File.Exists(BlacklistedPath))
-                File.WriteAllText(BlacklistedPath, JsonConvert.SerializeObject(BlacklistedUsers, Formatting.Indented), Encoding.UTF8);
+                File.WriteAllText(BlacklistedPath, "[]", Encoding.UTF8);
             if (!File.Exists(WhitelistedPath))
-                File.WriteAllText(WhitelistedPath, JsonConvert.SerializeObject(WhitelistedUsers, Formatting.Indented), Encoding.UTF8);
+                File.WriteAllText(WhitelistedPath, "[]", Encoding.UTF8);
 
             JsonConvert.PopulateObject(
                 File.ReadAllText(BlacklistedPath, Encoding.UTF8),

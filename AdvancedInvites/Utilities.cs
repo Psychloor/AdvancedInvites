@@ -18,8 +18,22 @@ namespace AdvancedInvites
 
     using Boolean = Il2CppSystem.Boolean;
 
+#if DEBUG
+    using VRC;
+#endif
+
     public static class Utilities
     {
+
+    #if DEBUG
+        public static void Request()
+        {
+            NotificationDetails details = new NotificationDetails();
+            details.Add("platform", Tools.Platform);
+
+            SendNotification(APIUser.CurrentUser.id, "requestInvite", string.Empty, details);
+        }
+    #endif
 
         private static CreatePortalDelegate ourCreatePortalDelegate;
 
@@ -58,7 +72,7 @@ namespace AdvancedInvites
 
                     ourSendNotificationDelegate = (SendNotificationDelegate)Delegate.CreateDelegate(
                         typeof(SendNotificationDelegate),
-                        NotificationManager.field_Private_Static_NotificationManager_0,
+                        NotificationManager.prop_NotificationManager_0,
                         sendNotificationMethod);
                     return ourSendNotificationDelegate;
                 }
@@ -160,6 +174,16 @@ namespace AdvancedInvites
             }
         }
 
+        public static ApiWorld CurrentRoom()
+        {
+            return RoomManager.field_Internal_Static_ApiWorld_0;
+        }
+
+        public static ApiWorldInstance CurrentWorldInstance()
+        {
+            return RoomManager.field_Internal_Static_ApiWorldInstance_0;
+        }
+
         public static void QueueHudMessage(string msg)
         {
             VRCUiManager.prop_VRCUiManager_0.field_Private_List_1_String_0.Add(msg);
@@ -193,32 +217,26 @@ namespace AdvancedInvites
         // Taken directly from older vrchat source
         public static bool IsPlatformCompatibleWithCurrentWorld(string platform)
         {
-            if (RoomManager.field_Internal_Static_ApiWorld_0 == null) return false;
+            if (CurrentRoom() == null) return false;
             bool notUsingAndroid = !string.IsNullOrEmpty(platform) && platform.Contains("android");
-            if (RoomManager.field_Internal_Static_ApiWorld_0.supportedPlatforms == ApiModel.SupportedPlatforms.Android
+            if (CurrentRoom().supportedPlatforms == ApiModel.SupportedPlatforms.Android
                 && !notUsingAndroid) return false;
-            return RoomManager.field_Internal_Static_ApiWorld_0.supportedPlatforms != ApiModel.SupportedPlatforms.StandaloneWindows || !notUsingAndroid;
+            return CurrentRoom().supportedPlatforms != ApiModel.SupportedPlatforms.StandaloneWindows || !notUsingAndroid;
         }
 
         public static void AcceptInviteRequest(string receiverUserId)
         {
-            ApiWorld currentRoom = RoomManager.field_Internal_Static_ApiWorld_0;
-            try
-            {
-                NotificationDetails details = new NotificationDetails();
-                details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
-                details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject());
-                details.Add("worldName", currentRoom.name);
-                
-                SendNotification(receiverUserId, "invite", string.Empty, details);
-            }
-            catch (Exception e)
-            {
-                MelonLogger.LogError("Error Sending Invite: "+e.Message);
-                MelonLogger.LogError(e.ToString());
-            }
+            ApiWorld currentRoom = CurrentRoom();
+            NotificationDetails details = new NotificationDetails();
+            details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
+
+            //details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
+            details.Add("worldName", currentRoom.name);
+
+            SendNotification(receiverUserId, "invite", string.Empty, details);
         }
 
+        // Since stuff bugs out if you do boxed booleans this will remain here unused till i might figure out something (or someone else does)
         public static void SendIncompatiblePlatformNotification(string receiverUserId)
         {
             NotificationDetails details = new NotificationDetails();
@@ -231,14 +249,14 @@ namespace AdvancedInvites
         public static bool AllowedToInvite()
         {
             // Instance owner
-            if (RoomManager.field_Internal_Static_ApiWorldInstance_0.idWithTags.IndexOf(APIUser.CurrentUser.id, StringComparison.Ordinal) >= 0) return true;
-            return GetAccessType(RoomManager.field_Internal_Static_ApiWorld_0.currentInstanceIdWithTags) switch
+            if (CurrentRoom().currentInstanceIdWithTags.IndexOf(APIUser.CurrentUser.id, StringComparison.Ordinal) >= 0) return true;
+            return GetAccessType(CurrentRoom().currentInstanceIdWithTags) switch
                 {
                     ApiWorldInstance.AccessType.Public          => true,
                     ApiWorldInstance.AccessType.FriendsOfGuests => true,
                     ApiWorldInstance.AccessType.InvitePlus      => true,
 
-                    // Not instance owner so no
+                    // Not instance owner/not mutual friend so no
                     ApiWorldInstance.AccessType.FriendsOnly => false,
                     ApiWorldInstance.AccessType.InviteOnly  => false,
                     _                                       => true

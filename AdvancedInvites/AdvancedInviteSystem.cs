@@ -23,10 +23,15 @@ namespace AdvancedInvites
 
     using UnhollowerRuntimeLib.XrefScans;
 
-    using String = Il2CppSystem.String;
-
     public sealed class AdvancedInviteSystem : MelonMod
     {
+
+    #if DEBUG
+        public override void OnUpdate()
+        {
+            if(Input.GetKeyDown(KeyCode.P)) Utilities.Request();
+        }
+    #endif
 
         private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
 
@@ -96,8 +101,8 @@ namespace AdvancedInvites
             if (__0 == null) return;
 
             // Original code doesn't handle much outside worlds so
-            if (RoomManager.field_Internal_Static_ApiWorld_0 == null
-                || RoomManager.field_Internal_Static_ApiWorldInstance_0 == null) return;
+            if (Utilities.CurrentRoom() == null
+                || Utilities.CurrentWorldInstance() == null) return;
 
             switch (__0.notificationType.ToLowerInvariant())
             {
@@ -121,14 +126,15 @@ namespace AdvancedInvites
 
                     if (!PermissionHandler.IsWhitelisted(__0.senderUserId)) return;
                     if (!Utilities.AllowedToInvite()) return;
-                    
-                    if (__0.details?.ContainsKey("platform") == true && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
-                    {
-                        Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
-                        Utilities.DeleteNotification(__0);
+
+                    if (__0.details?.ContainsKey("platform") == true
+                        && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
+
+                        // Bool's doesn't work and closes the game. just let it through
+                        //Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
+                        //Utilities.DeleteNotification(__0);
                         return;
-                    }
-                    
+
                     Utilities.AcceptInviteRequest(__0.senderUserId);
                     Utilities.DeleteNotification(__0);
                     return;

@@ -20,12 +20,12 @@ namespace AdvancedInvites
         public static void Initialize()
         {
             // Quickmenu
-            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserQuickMenu, "Blacklist Notif's", () => BlacklistUser(CurrentSelectedUser));
-            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserQuickMenu, "Whitelist Notif's", () => WhitelistUser(CurrentSelectedUser));
+            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserQuickMenu, "AdvancedInvites Blacklist", () => BlacklistUser(CurrentSelectedUser));
+            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserQuickMenu, "AdvancedInvites Whitelist", () => WhitelistUser(CurrentSelectedUser));
 
             // Social menu
-            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserDetailsMenu, "Blacklist Notif's", () => BlacklistUser(CurrentSocialUser));
-            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserDetailsMenu, "Whitelist Notif's", () => WhitelistUser(CurrentSocialUser));
+            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserDetailsMenu, "AdvancedInvites Blacklist", () => BlacklistUser(CurrentSocialUser));
+            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserDetailsMenu, "AdvancedInvites Whitelist", () => WhitelistUser(CurrentSocialUser));
         }
 
         private static void BlacklistUser(APIUser user)
