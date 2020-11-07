@@ -23,8 +23,12 @@ namespace AdvancedInvites
 
     using UnhollowerRuntimeLib.XrefScans;
 
+    using String = Il2CppSystem.String;
+
     public sealed class AdvancedInviteSystem : MelonMod
     {
+
+        private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
 
         public override void OnApplicationStart()
         {
@@ -51,7 +55,7 @@ namespace AdvancedInvites
             try
             {
                 // AddNotification - Method_Public_Void_Notification_EnumNPublicSealedvaAlReLo4vUnique_PDM_0 as of build 1010
-                // Also seems to be the first one each time more
+                // Also seems to be the first one each time more. otherwise, could use Where as the other ones are fake
                 MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
                     m =>
                         {
@@ -59,6 +63,7 @@ namespace AdvancedInvites
                                 || m.GetParameters().Length != 2
                                 || m.GetParameters()[0].ParameterType != typeof(Notification)) return false;
 
+                            // Some other ones for deleting? or something has strings in it
                             return XrefScanner.XrefScan(m).All(xrefInstance => xrefInstance.Type != XrefType.Global);
                         });
 
@@ -75,24 +80,31 @@ namespace AdvancedInvites
             PermissionHandler.LoadSettings();
         }
 
+        public override void VRChat_OnUiManagerInit()
+        {
+            UiButtons.Initialize();
+        }
+
         public override void OnModSettingsApplied()
         {
             InviteHandler.DeleteNotifications = MelonPrefs.GetBool("AdvancedInvites", "DeleteNotifications");
         }
 
-        private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
-        
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
         private static void AddNotificationPatch(Notification __0)
         {
             if (__0 == null) return;
+
+            // Original code doesn't handle much outside worlds so
+            if (RoomManager.field_Internal_Static_ApiWorld_0 == null
+                || RoomManager.field_Internal_Static_ApiWorldInstance_0 == null) return;
 
             switch (__0.notificationType.ToLowerInvariant())
             {
                 case "invite":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
-                    
+
                     if (!PermissionHandler.IsBlacklisted(__0.senderUserId)) return;
                     Utilities.DeleteNotification(__0);
                     return;
@@ -100,24 +112,23 @@ namespace AdvancedInvites
                 case "requestinvite":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
-                    
+
                     if (PermissionHandler.IsBlacklisted(__0.senderUserId))
                     {
                         Utilities.DeleteNotification(__0);
                         return;
                     }
-                    
+
                     if (!PermissionHandler.IsWhitelisted(__0.senderUserId)) return;
                     if (!Utilities.AllowedToInvite()) return;
-
-                    if (__0.details != null
-                        && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
+                    
+                    if (__0.details?.ContainsKey("platform") == true && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
                     {
                         Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
                         Utilities.DeleteNotification(__0);
                         return;
                     }
-
+                    
                     Utilities.AcceptInviteRequest(__0.senderUserId);
                     Utilities.DeleteNotification(__0);
                     return;

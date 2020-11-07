@@ -8,7 +8,7 @@ namespace AdvancedInvites
 
         public const string Company = null;
 
-        public const string DownloadLink = "https://github.com/Psychloor/AdvancedInvites/releases/download/1.3.0/AdvancedInvites.dll";
+        public const string DownloadLink = "https://github.com/Psychloor/AdvancedInvites/releases/download/1.4.0/AdvancedInvites.dll";
 
         public const string Name = "AdvancedInvites";
 

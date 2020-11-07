@@ -43,28 +43,24 @@ namespace AdvancedInvites
         {
             if (IsBlacklisted(apiUser.id)) return;
             BlacklistedUsers.Add(new PermissionEntry { DisplayName = apiUser.displayName, UserId = apiUser.id });
-            SaveSettings();
         }
 
         internal static void RemoveFromBlacklist(APIUser apiUser)
         {
             if (!IsBlacklisted(apiUser.id)) return;
-            WhitelistedUsers.RemoveAll(entry => entry.UserId.Equals(apiUser.id, StringComparison.OrdinalIgnoreCase));
-            SaveSettings();
+            BlacklistedUsers.RemoveAll(entry => entry.UserId.Equals(apiUser.id, StringComparison.OrdinalIgnoreCase));
         }
 
         internal static void AddToWhitelist(APIUser apiUser)
         {
             if (IsWhitelisted(apiUser.id)) return;
-            BlacklistedUsers.Add(new PermissionEntry { DisplayName = apiUser.displayName, UserId = apiUser.id });
-            SaveSettings();
+            WhitelistedUsers.Add(new PermissionEntry { DisplayName = apiUser.displayName, UserId = apiUser.id });
         }
 
         internal static void RemoveFromWhitelist(APIUser apiUser)
         {
             if (!IsWhitelisted(apiUser.id)) return;
             WhitelistedUsers.RemoveAll(entry => entry.UserId.Equals(apiUser.id, StringComparison.OrdinalIgnoreCase));
-            SaveSettings();
         }
 
         internal static void LoadSettings()
@@ -72,8 +68,10 @@ namespace AdvancedInvites
             if (!Directory.Exists("UserData")) Directory.CreateDirectory("UserData");
             if (!Directory.Exists("UserData/AdvancedInvites")) Directory.CreateDirectory("UserData/AdvancedInvites");
 
-            if (!File.Exists(BlacklistedPath)) File.WriteAllText(BlacklistedPath, string.Empty, Encoding.UTF8);
-            if (!File.Exists(WhitelistedPath)) File.WriteAllText(WhitelistedPath, string.Empty, Encoding.UTF8);
+            if (!File.Exists(BlacklistedPath))
+                File.WriteAllText(BlacklistedPath, JsonConvert.SerializeObject(BlacklistedUsers, Formatting.Indented), Encoding.UTF8);
+            if (!File.Exists(WhitelistedPath))
+                File.WriteAllText(WhitelistedPath, JsonConvert.SerializeObject(WhitelistedUsers, Formatting.Indented), Encoding.UTF8);
 
             JsonConvert.PopulateObject(
                 File.ReadAllText(BlacklistedPath, Encoding.UTF8),
@@ -86,7 +84,7 @@ namespace AdvancedInvites
                 new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, MissingMemberHandling = MissingMemberHandling.Ignore });
         }
 
-        private static void SaveSettings()
+        public static void SaveSettings()
         {
             File.WriteAllText(BlacklistedPath, JsonConvert.SerializeObject(BlacklistedUsers, Formatting.Indented), Encoding.UTF8);
             File.WriteAllText(WhitelistedPath, JsonConvert.SerializeObject(WhitelistedUsers, Formatting.Indented), Encoding.UTF8);

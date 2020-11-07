@@ -21,8 +21,6 @@ namespace AdvancedInvites
     public static class Utilities
     {
 
-        public delegate void SendNotificationDelegate(string receiverUserId, string notificationType, string message, NotificationDetails notificationDetails);
-
         private static CreatePortalDelegate ourCreatePortalDelegate;
 
         private static DeleteNotificationDelegate ourDeleteNotificationDelegate;
@@ -37,13 +35,12 @@ namespace AdvancedInvites
 
         private static SendNotificationDelegate ourSendNotificationDelegate;
 
-        public static SendNotificationDelegate SendNotification
+        private static SendNotificationDelegate SendNotification
         {
             get
             {
                 if (ourSendNotificationDelegate != null) return ourSendNotificationDelegate;
 
-                // Scan for the method used by invite friend
                 MethodInfo inviteFriendMethod = typeof(PageUserInfo).GetMethod(nameof(PageUserInfo.InviteFriend), BindingFlags.Public | BindingFlags.Instance);
                 foreach (XrefInstance xrefInstance in XrefScanner.XrefScan(inviteFriendMethod))
                 {
@@ -61,7 +58,7 @@ namespace AdvancedInvites
 
                     ourSendNotificationDelegate = (SendNotificationDelegate)Delegate.CreateDelegate(
                         typeof(SendNotificationDelegate),
-                        NotificationManager.prop_NotificationManager_0,
+                        NotificationManager.field_Private_Static_NotificationManager_0,
                         sendNotificationMethod);
                     return ourSendNotificationDelegate;
                 }
@@ -71,7 +68,7 @@ namespace AdvancedInvites
             }
         }
 
-        internal static VRCUiManagerDelegate GetVRCUiManager
+        private static VRCUiManagerDelegate GetVRCUiManager
         {
             get
             {
@@ -163,6 +160,11 @@ namespace AdvancedInvites
             }
         }
 
+        public static void QueueHudMessage(string msg)
+        {
+            VRCUiManager.prop_VRCUiManager_0.field_Private_List_1_String_0.Add(msg);
+        }
+
         public static ApiWorldInstance.AccessType GetAccessType(string tags)
         {
             if (tags.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.FriendsOfGuests;
@@ -175,7 +177,6 @@ namespace AdvancedInvites
 
         public static string GetAccessName(ApiWorldInstance.AccessType accessType)
         {
-            // Switch expression. yes c# 8 works in MelonLoader as it compiles differently
             return accessType switch
                 {
                     ApiWorldInstance.AccessType.Public => "Public",
@@ -187,47 +188,50 @@ namespace AdvancedInvites
                     _ => throw new ArgumentOutOfRangeException(nameof(accessType), accessType, "what the fuck happened?")
                 };
         }
-        
+
         // Don't ask alright. either i'm too tired or this is too weird.
         // Taken directly from older vrchat source
         public static bool IsPlatformCompatibleWithCurrentWorld(string platform)
         {
-            if (RoomManager.field_Internal_Static_ApiWorld_0 == null)
-            {
-                return false;
-            }
+            if (RoomManager.field_Internal_Static_ApiWorld_0 == null) return false;
             bool notUsingAndroid = !string.IsNullOrEmpty(platform) && platform.Contains("android");
-            if (RoomManager.field_Internal_Static_ApiWorld_0.supportedPlatforms == ApiModel.SupportedPlatforms.Android && !notUsingAndroid) return false;
+            if (RoomManager.field_Internal_Static_ApiWorld_0.supportedPlatforms == ApiModel.SupportedPlatforms.Android
+                && !notUsingAndroid) return false;
             return RoomManager.field_Internal_Static_ApiWorld_0.supportedPlatforms != ApiModel.SupportedPlatforms.StandaloneWindows || !notUsingAndroid;
         }
 
         public static void AcceptInviteRequest(string receiverUserId)
         {
             ApiWorld currentRoom = RoomManager.field_Internal_Static_ApiWorld_0;
-            NotificationDetails details = new NotificationDetails
-                                              {
-                                                  ["worldId"] = $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}",
-                                                  ["rsvp"] = new Boolean { m_value = true }.BoxIl2CppObject(),
-                                                  ["worldName"] = currentRoom.name
-                                              };
-
-            SendNotification(receiverUserId, "invite", string.Empty, details);
+            try
+            {
+                NotificationDetails details = new NotificationDetails();
+                details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
+                details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject());
+                details.Add("worldName", currentRoom.name);
+                
+                SendNotification(receiverUserId, "invite", string.Empty, details);
+            }
+            catch (Exception e)
+            {
+                MelonLogger.LogError("Error Sending Invite: "+e.Message);
+                MelonLogger.LogError(e.ToString());
+            }
         }
 
         public static void SendIncompatiblePlatformNotification(string receiverUserId)
         {
-            NotificationDetails details = new NotificationDetails
-                                              {
-                                                  ["incompatible"] = new Boolean { m_value = true }.BoxIl2CppObject(),
-                                                  ["rsvp"] = new Boolean { m_value = true }.BoxIl2CppObject()
-                                              };
+            NotificationDetails details = new NotificationDetails();
+            details.Add("incompatible", new Boolean { m_value = true }.BoxIl2CppObject());
+            details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject());
 
             SendNotification(receiverUserId, "invite", string.Empty, details);
         }
 
         public static bool AllowedToInvite()
         {
-            if (RoomManager.field_Internal_Static_ApiWorldInstance_0.GetInstanceCreator().Equals(APIUser.CurrentUser.id, StringComparison.Ordinal)) return true;
+            // Instance owner
+            if (RoomManager.field_Internal_Static_ApiWorldInstance_0.idWithTags.IndexOf(APIUser.CurrentUser.id, StringComparison.Ordinal) >= 0) return true;
             return GetAccessType(RoomManager.field_Internal_Static_ApiWorld_0.currentInstanceIdWithTags) switch
                 {
                     ApiWorldInstance.AccessType.Public          => true,
@@ -363,6 +367,8 @@ namespace AdvancedInvites
             MelonLogger.LogWarning($"XRefScanMethodCount \"{methodBase}\" has all null/empty parameters. Returning -1");
             return -1;
         }
+
+        private delegate void SendNotificationDelegate(string receiverUserId, string notificationType, string message, NotificationDetails notificationDetails);
 
         internal delegate VRCUiManager VRCUiManagerDelegate();
 
