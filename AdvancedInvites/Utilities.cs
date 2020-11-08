@@ -13,6 +13,7 @@ namespace AdvancedInvites
 
     using UnityEngine;
 
+    using VRC;
     using VRC.Core;
     using VRC.UI;
 
@@ -186,7 +187,7 @@ namespace AdvancedInvites
 
         public static void QueueHudMessage(string msg)
         {
-            VRCUiManager.prop_VRCUiManager_0.field_Private_List_1_String_0.Add(msg);
+            GetVRCUiManager().field_Private_List_1_String_0.Add(msg);
         }
 
         public static ApiWorldInstance.AccessType GetAccessType(string tags)
@@ -213,16 +214,31 @@ namespace AdvancedInvites
                 };
         }
 
-        // Don't ask alright. either i'm too tired or this is too weird.
-        // Taken directly from older vrchat source
+        // might work better? at least cleaner
         public static bool IsPlatformCompatibleWithCurrentWorld(string platform)
         {
             if (CurrentRoom() == null) return false;
-            bool notUsingAndroid = !string.IsNullOrEmpty(platform) && platform.Contains("android");
-            if (CurrentRoom().supportedPlatforms == ApiModel.SupportedPlatforms.Android
-                && !notUsingAndroid) return false;
-            return CurrentRoom().supportedPlatforms != ApiModel.SupportedPlatforms.StandaloneWindows || !notUsingAndroid;
+            if (string.IsNullOrEmpty(platform)) return false; // true or false? supposed to be included at least
+
+            return CurrentRoom().supportedPlatforms switch
+                {
+                    ApiModel.SupportedPlatforms.StandaloneWindows => Tools.Platform.Equals(platform, StringComparison.OrdinalIgnoreCase),
+                    ApiModel.SupportedPlatforms.Android           => Tools.Platform.Equals(platform, StringComparison.OrdinalIgnoreCase),
+                    ApiModel.SupportedPlatforms.All               => true,
+                    _                                             => true
+                };
         }
+
+        // Don't ask alright. either i'm too tired or this is too weird.
+        // Taken directly from older vrchat source
+        /* public static bool IsPlatformCompatibleWithCurrentWorld(string platform)
+         {
+             if (CurrentRoom() == null) return false;
+             bool notUsingAndroid = !string.IsNullOrEmpty(platform) && platform.Contains("android");
+             if (CurrentRoom().supportedPlatforms == ApiModel.SupportedPlatforms.Android
+                 && !notUsingAndroid) return false;
+             return CurrentRoom().supportedPlatforms != ApiModel.SupportedPlatforms.StandaloneWindows || !notUsingAndroid;
+         }*/
 
         public static void AcceptInviteRequest(string receiverUserId)
         {

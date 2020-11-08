@@ -10,7 +10,7 @@ namespace AdvancedInvites
 
     using VRC.Core;
 
-    public static class PermissionHandler
+    public static class UserPermissionHandler
     {
 
         private const string BlacklistedPath = "UserData/AdvancedInvites/Blacklisted.json";

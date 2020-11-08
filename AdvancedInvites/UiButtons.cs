@@ -26,48 +26,72 @@ namespace AdvancedInvites
             // Social menu
             ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserDetailsMenu, "AdvancedInvites Blacklist", () => BlacklistUser(CurrentSocialUser));
             ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserDetailsMenu, "AdvancedInvites Whitelist", () => WhitelistUser(CurrentSocialUser));
+
+            // Worlds menu
+            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.WorldDetailsMenu, "AdvancedInvites Blacklist", BlacklistWorld);
+        }
+
+        private static void BlacklistWorld()
+        {
+            ApiWorld currentWorld = Object.FindObjectOfType<PageWorldInfo>()?.field_Private_ApiWorld_0;
+            if (currentWorld == null) return;
+
+            if (WorldPermissionHandler.IsBlacklisted(currentWorld.id))
+            {
+                WorldPermissionHandler.RemoveFromBlacklist(currentWorld);
+                MelonLogger.Log($"{currentWorld.name} removed from blacklist");
+                Utilities.QueueHudMessage($"{currentWorld.name} removed from blacklist");
+            }
+            else
+            {
+                WorldPermissionHandler.AddToBlacklist(currentWorld);
+                MelonLogger.Log($"{currentWorld.name} added to blacklist");
+                Utilities.QueueHudMessage($"{currentWorld.name} added to blacklist");
+            }
+
+            WorldPermissionHandler.SaveSettings();
         }
 
         private static void BlacklistUser(APIUser user)
         {
             if (user == null) return;
 
-            if (PermissionHandler.IsBlacklisted(user.id))
+            if (UserPermissionHandler.IsBlacklisted(user.id))
             {
-                PermissionHandler.RemoveFromBlacklist(user);
+                UserPermissionHandler.RemoveFromBlacklist(user);
                 MelonLogger.Log($"{user.displayName} removed from blacklist");
                 Utilities.QueueHudMessage($"{user.displayName} removed from blacklist");
             }
             else
             {
-                if (PermissionHandler.IsWhitelisted(user.id)) PermissionHandler.RemoveFromWhitelist(user);
-                PermissionHandler.AddToBlacklist(user);
+                if (UserPermissionHandler.IsWhitelisted(user.id)) UserPermissionHandler.RemoveFromWhitelist(user);
+                UserPermissionHandler.AddToBlacklist(user);
                 MelonLogger.Log($"{user.displayName} added to blacklist");
                 Utilities.QueueHudMessage($"{user.displayName} added to blacklist");
             }
 
-            PermissionHandler.SaveSettings();
+            UserPermissionHandler.SaveSettings();
         }
 
         private static void WhitelistUser(APIUser user)
         {
             if (user == null) return;
 
-            if (PermissionHandler.IsWhitelisted(user.id))
+            if (UserPermissionHandler.IsWhitelisted(user.id))
             {
-                PermissionHandler.RemoveFromWhitelist(user);
+                UserPermissionHandler.RemoveFromWhitelist(user);
                 MelonLogger.Log($"{user.displayName} removed from whitelist");
                 Utilities.QueueHudMessage($"{user.displayName} removed from whitelist");
             }
             else
             {
-                if (PermissionHandler.IsBlacklisted(user.id)) PermissionHandler.RemoveFromBlacklist(user);
-                PermissionHandler.AddToWhitelist(user);
+                if (UserPermissionHandler.IsBlacklisted(user.id)) UserPermissionHandler.RemoveFromBlacklist(user);
+                UserPermissionHandler.AddToWhitelist(user);
                 MelonLogger.Log($"{user.displayName} added to whitelist");
                 Utilities.QueueHudMessage($"{user.displayName} added to whitelist");
             }
 
-            PermissionHandler.SaveSettings();
+            UserPermissionHandler.SaveSettings();
         }
 
     }

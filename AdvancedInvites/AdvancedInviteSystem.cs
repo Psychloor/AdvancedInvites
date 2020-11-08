@@ -1,13 +1,4 @@
-﻿using AdvancedInvites;
-
-using MelonLoader;
-
-using BuildInfo = AdvancedInvites.BuildInfo;
-
-[assembly: MelonInfo(typeof(AdvancedInviteSystem), BuildInfo.Name, BuildInfo.Version, BuildInfo.Author, BuildInfo.DownloadLink)]
-[assembly: MelonGame("VRChat", "VRChat")]
-
-namespace AdvancedInvites
+﻿namespace AdvancedInvites
 {
 
     using System;
@@ -23,6 +14,10 @@ namespace AdvancedInvites
 
     using UnhollowerRuntimeLib.XrefScans;
 
+#if DEBUG
+    using UnityEngine;
+#endif
+
     public sealed class AdvancedInviteSystem : MelonMod
     {
 
@@ -32,6 +27,9 @@ namespace AdvancedInvites
             if(Input.GetKeyDown(KeyCode.P)) Utilities.Request();
         }
     #endif
+        private static bool whitelistEnabled = true;
+
+        private static bool blacklistEnabled = true;
 
         private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
 
@@ -40,7 +38,9 @@ namespace AdvancedInvites
             MelonPrefs.RegisterCategory("AdvancedInvites", "Advanced Invites");
 
             MelonPrefs.RegisterBool("AdvancedInvites", "DeleteNotifications", InviteHandler.DeleteNotifications, "Delete Notification After Successful Use");
-            InviteHandler.DeleteNotifications = MelonPrefs.GetBool("AdvancedInvites", "DeleteNotifications");
+            MelonPrefs.RegisterBool("AdvancedInvites", "BlacklistEnabled", blacklistEnabled, "Blacklist System");
+            MelonPrefs.RegisterBool("AdvancedInvites", "WhitelistEnabled", whitelistEnabled, "Whitelist System");
+            OnModSettingsApplied();
 
             try
             {
@@ -82,7 +82,8 @@ namespace AdvancedInvites
                 MelonLogger.LogError("Error Patching AddNotification: " + e.Message);
             }
 
-            PermissionHandler.LoadSettings();
+            UserPermissionHandler.LoadSettings();
+            WorldPermissionHandler.LoadSettings();
         }
 
         public override void VRChat_OnUiManagerInit()
@@ -93,6 +94,8 @@ namespace AdvancedInvites
         public override void OnModSettingsApplied()
         {
             InviteHandler.DeleteNotifications = MelonPrefs.GetBool("AdvancedInvites", "DeleteNotifications");
+            blacklistEnabled = MelonPrefs.GetBool("AdvancedInvites", "BlacklistEnabled");
+            whitelistEnabled = MelonPrefs.GetBool("AdvancedInvites", "WhitelistEnabled");
         }
 
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
@@ -110,21 +113,23 @@ namespace AdvancedInvites
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
 
-                    if (!PermissionHandler.IsBlacklisted(__0.senderUserId)) return;
-                    Utilities.DeleteNotification(__0);
-                    return;
+                    string worldId = __0.details["worldId"].ToString().Split(':')[0];
+                    if (blacklistEnabled && (UserPermissionHandler.IsBlacklisted(__0.senderUserId) || WorldPermissionHandler.IsBlacklisted(worldId)))
+                        Utilities.DeleteNotification(__0);
+                    break;
 
                 case "requestinvite":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
 
-                    if (PermissionHandler.IsBlacklisted(__0.senderUserId))
+                    if (blacklistEnabled && UserPermissionHandler.IsBlacklisted(__0.senderUserId))
                     {
                         Utilities.DeleteNotification(__0);
                         return;
                     }
 
-                    if (!PermissionHandler.IsWhitelisted(__0.senderUserId)) return;
+                    if (!whitelistEnabled
+                        || !UserPermissionHandler.IsWhitelisted(__0.senderUserId)) return;
                     if (!Utilities.AllowedToInvite()) return;
 
                     if (__0.details?.ContainsKey("platform") == true
