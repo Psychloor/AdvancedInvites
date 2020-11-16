@@ -5,6 +5,8 @@ Doesn't let you drop a portal if it's Friends only or Private(Invite) only.
 
 You can also delete notifications after successful use. (Settings)
 
+Custom notification sound can be changed by replacing/adding the sound file "UserData/AdvancedInvites/Notification.ogg"
+
 # Black/Whitelist system
 All blacklisted people can't send you any invites or request at all.
 All whitelisted people automatically get their invite requests accepted unless they're on another platform or you're not the instance creator of a private world.
