@@ -9,4 +9,6 @@ You can also delete notifications after successful use. (Settings)
 All blacklisted people can't send you any invites or request at all.
 All whitelisted people automatically get their invite requests accepted unless they're on another platform or you're not the instance creator of a private world.
 
+Can also blacklist specific worlds and toggle all black/whitelisting systems
+
 ![Popup once you accept an invite](https://i.imgur.com/2J0TMxi.png)
