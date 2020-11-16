@@ -7,8 +7,6 @@ You can also delete notifications after successful use. (Settings)
 
 Custom notification sound can be changed by replacing/adding the sound file "UserData/AdvancedInvites/Notification.ogg"
 
-Default notification sound taken from https://www.freesoundeffects.com/track/musical-game-elements-05-427976/
-
 # Black/Whitelist system
 All blacklisted people can't send you any invites or request at all.
 All whitelisted people automatically get their invite requests accepted unless they're on another platform or you're not the instance creator of a private world.
