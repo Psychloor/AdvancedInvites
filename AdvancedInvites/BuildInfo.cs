@@ -8,7 +8,7 @@ namespace AdvancedInvites
 
         public const string Company = null;
 
-        public const string DownloadLink = "https://github.com/Psychloor/AdvancedInvites/releases/download/1.4.2/AdvancedInvites.dll";
+        public const string DownloadLink = "https://github.com/Psychloor/AdvancedInvites/releases";
 
         public const string Name = "AdvancedInvites";
 
@@ -19,7 +19,8 @@ namespace AdvancedInvites
         // 1.4.0 Black/Whitelist
         // 1.4.1 Turn off Blacklist/Whitelist systems
         // 1.4.2 Blacklist Worlds too
-        public const string Version = "1.4.2";
+        // 1.4.3 Notification Sounds
+        public const string Version = "1.4.3";
 
     }
 

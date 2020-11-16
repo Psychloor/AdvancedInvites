@@ -18,11 +18,7 @@ namespace AdvancedInvites
     using VRC.UI;
 
     using Boolean = Il2CppSystem.Boolean;
-
-#if DEBUG
-    using VRC;
-#endif
-
+    
     public static class Utilities
     {
 

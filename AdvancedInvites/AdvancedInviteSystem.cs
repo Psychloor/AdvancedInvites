@@ -40,6 +40,7 @@
             MelonPrefs.RegisterBool("AdvancedInvites", "DeleteNotifications", InviteHandler.DeleteNotifications, "Delete Notification After Successful Use");
             MelonPrefs.RegisterBool("AdvancedInvites", "BlacklistEnabled", blacklistEnabled, "Blacklist System");
             MelonPrefs.RegisterBool("AdvancedInvites", "WhitelistEnabled", whitelistEnabled, "Whitelist System");
+            MelonPrefs.RegisterFloat("AdvancedInvites", "NotificationVolume", .8f, "Notification Volume");
             OnModSettingsApplied();
 
             try
@@ -89,6 +90,7 @@
         public override void VRChat_OnUiManagerInit()
         {
             UiButtons.Initialize();
+            SoundPlayer.Initialize();
         }
 
         public override void OnModSettingsApplied()
@@ -96,6 +98,7 @@
             InviteHandler.DeleteNotifications = MelonPrefs.GetBool("AdvancedInvites", "DeleteNotifications");
             blacklistEnabled = MelonPrefs.GetBool("AdvancedInvites", "BlacklistEnabled");
             whitelistEnabled = MelonPrefs.GetBool("AdvancedInvites", "WhitelistEnabled");
+            SoundPlayer.Volume = MelonPrefs.GetFloat("AdvancedInvites", "NotificationVolume");
         }
 
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
@@ -115,7 +118,11 @@
 
                     string worldId = __0.details["worldId"].ToString().Split(':')[0];
                     if (blacklistEnabled && (UserPermissionHandler.IsBlacklisted(__0.senderUserId) || WorldPermissionHandler.IsBlacklisted(worldId)))
+                    {
                         Utilities.DeleteNotification(__0);
+                        return;
+                    }
+                    SoundPlayer.PlayNotificationSound();
                     break;
 
                 case "requestinvite":
@@ -128,20 +135,32 @@
                         return;
                     }
 
-                    if (!whitelistEnabled
-                        || !UserPermissionHandler.IsWhitelisted(__0.senderUserId)) return;
-                    if (!Utilities.AllowedToInvite()) return;
+                    if (whitelistEnabled && UserPermissionHandler.IsWhitelisted(__0.senderUserId))
+                    {
+                        if (!Utilities.AllowedToInvite())
+                        {
+                            SoundPlayer.PlayNotificationSound();
+                            return;
+                        }
 
-                    if (__0.details?.ContainsKey("platform") == true
-                        && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
+                        if (__0.details?.ContainsKey("platform") == true
+                            && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
+                        {
 
-                        // Bool's doesn't work and closes the game. just let it through
-                        //Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
-                        //Utilities.DeleteNotification(__0);
-                        return;
+                            // Bool's doesn't work and closes the game. just let it through
+                            //Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
+                            //Utilities.DeleteNotification(__0);
+                            SoundPlayer.PlayNotificationSound();
+                            return;
+                        }
 
-                    Utilities.AcceptInviteRequest(__0.senderUserId);
-                    Utilities.DeleteNotification(__0);
+                        Utilities.AcceptInviteRequest(__0.senderUserId);
+                        Utilities.DeleteNotification(__0);
+                    }
+                    else
+                    {
+                        SoundPlayer.PlayNotificationSound();
+                    }
                     return;
 
                 default:
