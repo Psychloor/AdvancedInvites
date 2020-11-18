@@ -4,6 +4,7 @@ namespace AdvancedInvites
     using System;
     using System.Collections;
     using System.IO;
+    using System.Reflection;
 
     using MelonLoader;
 
@@ -46,7 +47,22 @@ namespace AdvancedInvites
             if (!File.Exists(AudioPath))
             {
                 MelonLogger.Log("Notification Sound Not Found. Creating default one");
-                File.WriteAllBytes(AudioPath, Convert.FromBase64String(NotificationSound.NotificationBase64));
+                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AdvancedInvites.Notification.ogg");
+                try
+                {
+                    using (var fs = new FileStream(AudioPath, FileMode.Create))
+                    {
+                        // ReSharper disable once PossibleNullReferenceException
+                        stream.CopyTo(fs);
+                        fs.Close();
+                    }
+                }
+                catch (Exception e)
+                {
+                    MelonLogger.LogError("Something went wrong writing the file to UserData/AdvancedInvites/\n" + e);
+                    yield break;
+                }
+                stream.Close();
             }
 
             WWW request = new WWW(Path.GetFullPath(AudioPath));

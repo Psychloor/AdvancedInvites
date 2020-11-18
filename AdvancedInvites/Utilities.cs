@@ -241,7 +241,6 @@ namespace AdvancedInvites
             ApiWorld currentRoom = CurrentRoom();
             NotificationDetails details = new NotificationDetails();
             details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
-
             //details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
             details.Add("worldName", currentRoom.name);
 
@@ -271,7 +270,7 @@ namespace AdvancedInvites
                     // Not instance owner/not mutual friend so no
                     ApiWorldInstance.AccessType.FriendsOnly => false,
                     ApiWorldInstance.AccessType.InviteOnly  => false,
-                    _                                       => true
+                    _                                       => false
                 };
         }
 
@@ -299,6 +298,7 @@ namespace AdvancedInvites
         {
             GetVRCUiManager().HideScreen("POPUP");
         }
+        
         public static void ShowAlert(string title, string content, float timeOut = 10f)
         {
             GetShowAlertDelegate(title, content, timeOut);
