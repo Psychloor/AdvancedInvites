@@ -20,15 +20,17 @@ namespace AdvancedInvites
         public static void Initialize()
         {
             // Quickmenu
-            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserQuickMenu, "AdvancedInvites Blacklist", () => BlacklistUser(CurrentSelectedUser));
-            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserQuickMenu, "AdvancedInvites Whitelist", () => WhitelistUser(CurrentSelectedUser));
+            ICustomLayoutedMenu userQuickMenuPage = ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu);
+            userQuickMenuPage.AddSimpleButton("AdvancedInvites\nBlacklist", () => BlacklistUser(CurrentSelectedUser));
+            userQuickMenuPage.AddSimpleButton("AdvancedInvites\nWhitelist", () => WhitelistUser(CurrentSelectedUser));
 
             // Social menu
-            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserDetailsMenu, "AdvancedInvites Blacklist", () => BlacklistUser(CurrentSocialUser));
-            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.UserDetailsMenu, "AdvancedInvites Whitelist", () => WhitelistUser(CurrentSocialUser));
+            ICustomLayoutedMenu userDetailsMenuPage = ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserDetailsMenu);
+            userDetailsMenuPage.AddSimpleButton("AdvancedInvites\nBlacklist", () => BlacklistUser(CurrentSocialUser));
+            userDetailsMenuPage.AddSimpleButton("AdvancedInvites\nWhitelist", () => WhitelistUser(CurrentSocialUser));
 
             // Worlds menu
-            ExpansionKitApi.RegisterSimpleMenuButton(ExpandedMenu.WorldDetailsMenu, "AdvancedInvites Blacklist", BlacklistWorld);
+            ExpansionKitApi.GetExpandedMenu(ExpandedMenu.WorldDetailsMenu).AddSimpleButton("AdvancedInvites\nBlacklist", BlacklistWorld);
         }
 
         private static void BlacklistWorld()
