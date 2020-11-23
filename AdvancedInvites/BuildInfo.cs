@@ -20,7 +20,8 @@ namespace AdvancedInvites
         // 1.4.1 Turn off Blacklist/Whitelist systems
         // 1.4.2 Blacklist Worlds too
         // 1.4.3 Notification Sounds
-        public const string Version = "1.4.3";
+        // 1.5.0 Update UIX and thanks to it. handle users/worlds in-game. all hail lord Knah
+        public const string Version = "1.5.0";
 
     }
 
