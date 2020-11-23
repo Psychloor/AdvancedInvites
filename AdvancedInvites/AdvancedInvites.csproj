@@ -93,6 +93,9 @@
       <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\UnityEngine.PhysicsModule.dll</HintPath>
         <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule, Version=3.7.1.6, Culture=neutral, PublicKeyToken=null">
+      <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UnityWebRequestWWWModule">
       <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
         <Private>False</Private>

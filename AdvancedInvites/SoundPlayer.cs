@@ -9,6 +9,7 @@ namespace AdvancedInvites
     using MelonLoader;
 
     using UnityEngine;
+    using UnityEngine.Networking;
 
     public class SoundPlayer
     {
@@ -65,7 +66,7 @@ namespace AdvancedInvites
             }
 
             WWW request = new WWW(Path.GetFullPath(AudioPath));
-            instance.notificationSound = request.GetAudioClip();
+            instance.notificationSound = request.GetAudioClip(false, false, AudioType.OGGVORBIS);
             instance.notificationSound.hideFlags = HideFlags.HideAndDontSave;
 
             while (!request.isDone || instance.notificationSound.loadState == AudioDataLoadState.Loading)

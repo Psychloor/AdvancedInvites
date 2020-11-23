@@ -2,6 +2,7 @@ namespace AdvancedInvites
 {
 
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
@@ -17,9 +18,9 @@ namespace AdvancedInvites
 
         private const string WhitelistedPath = "UserData/AdvancedInvites/Whitelisted.json";
 
-        private static readonly List<PermissionEntry> BlacklistedUsers = new List<PermissionEntry>();
+        internal static readonly List<PermissionEntry> BlacklistedUsers = new List<PermissionEntry>();
 
-        private static readonly List<PermissionEntry> WhitelistedUsers = new List<PermissionEntry>();
+        internal static readonly List<PermissionEntry> WhitelistedUsers = new List<PermissionEntry>();
 
         internal static bool IsBlacklisted(string userId)
         {
@@ -45,10 +46,10 @@ namespace AdvancedInvites
             BlacklistedUsers.Add(new PermissionEntry { DisplayName = apiUser.displayName, UserId = apiUser.id });
         }
 
-        internal static void RemoveFromBlacklist(APIUser apiUser)
+        internal static void RemoveFromBlacklist(string userId)
         {
-            if (!IsBlacklisted(apiUser.id)) return;
-            BlacklistedUsers.RemoveAll(entry => entry.UserId.Equals(apiUser.id, StringComparison.OrdinalIgnoreCase));
+            if (!IsBlacklisted(userId)) return;
+            BlacklistedUsers.RemoveAll(entry => entry.UserId.Equals(userId, StringComparison.OrdinalIgnoreCase));
         }
 
         internal static void AddToWhitelist(APIUser apiUser)
@@ -57,10 +58,10 @@ namespace AdvancedInvites
             WhitelistedUsers.Add(new PermissionEntry { DisplayName = apiUser.displayName, UserId = apiUser.id });
         }
 
-        internal static void RemoveFromWhitelist(APIUser apiUser)
+        internal static void RemoveFromWhitelist(string userId)
         {
-            if (!IsWhitelisted(apiUser.id)) return;
-            WhitelistedUsers.RemoveAll(entry => entry.UserId.Equals(apiUser.id, StringComparison.OrdinalIgnoreCase));
+            if (!IsWhitelisted(userId)) return;
+            WhitelistedUsers.RemoveAll(entry => entry.UserId.Equals(userId, StringComparison.OrdinalIgnoreCase));
         }
 
         internal static void LoadSettings()
@@ -90,7 +91,7 @@ namespace AdvancedInvites
             File.WriteAllText(WhitelistedPath, JsonConvert.SerializeObject(WhitelistedUsers, Formatting.Indented), Encoding.UTF8);
         }
 
-        private class PermissionEntry
+        internal class PermissionEntry
         {
 
             [JsonProperty("DisplayName")]

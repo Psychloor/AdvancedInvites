@@ -15,7 +15,7 @@ namespace AdvancedInvites
 
         private const string BlacklistedPath = "UserData/AdvancedInvites/BlacklistedWorlds.json";
 
-        private static readonly List<PermissionEntry> BlacklistedWorlds = new List<PermissionEntry>();
+        internal static readonly List<PermissionEntry> BlacklistedWorlds = new List<PermissionEntry>();
 
         internal static bool IsBlacklisted(string worldId)
         {
@@ -32,10 +32,10 @@ namespace AdvancedInvites
             BlacklistedWorlds.Add(new PermissionEntry { WorldName = apiWorld.name, WorldId = apiWorld.id });
         }
 
-        internal static void RemoveFromBlacklist(ApiWorld apiWorld)
+        internal static void RemoveFromBlacklist(string worldId)
         {
-            if (!IsBlacklisted(apiWorld.id)) return;
-            BlacklistedWorlds.RemoveAll(entry => entry.WorldId.Equals(apiWorld.id, StringComparison.OrdinalIgnoreCase));
+            if (!IsBlacklisted(worldId)) return;
+            BlacklistedWorlds.RemoveAll(entry => entry.WorldId.Equals(worldId, StringComparison.OrdinalIgnoreCase));
         }
 
         internal static void LoadSettings()
@@ -57,7 +57,7 @@ namespace AdvancedInvites
             File.WriteAllText(BlacklistedPath, JsonConvert.SerializeObject(BlacklistedWorlds, Formatting.Indented), Encoding.UTF8);
         }
 
-        private class PermissionEntry
+        internal class PermissionEntry
         {
 
             [JsonProperty("WorldID")]
