@@ -13,6 +13,9 @@
     using Transmtn.DTO.Notifications;
 
     using UnhollowerRuntimeLib.XrefScans;
+
+    using VRC.Core;
+
 #if DEBUG
     using UnityEngine;
 
@@ -24,6 +27,10 @@
         private static bool whitelistEnabled = true;
 
         private static bool blacklistEnabled = true;
+
+        private static bool joinMeNotifyRequest = true;
+
+        private static bool ignoreBusyStatus = false;
 
         private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
 
@@ -42,6 +49,8 @@
             MelonPrefs.RegisterBool("AdvancedInvites", "BlacklistEnabled", blacklistEnabled, "Blacklist System");
             MelonPrefs.RegisterBool("AdvancedInvites", "WhitelistEnabled", whitelistEnabled, "Whitelist System");
             MelonPrefs.RegisterFloat("AdvancedInvites", "NotificationVolume", .8f, "Notification Volume");
+            MelonPrefs.RegisterBool("AdvancedInvites", "JoinMeNotifyRequest", joinMeNotifyRequest, "Join Me Req Notification Sound");
+            MelonPrefs.RegisterBool("AdvancedInvites", "IgnoreBusyStatus", ignoreBusyStatus, "Ignore Busy Status");
             OnModSettingsApplied();
 
             try
@@ -100,6 +109,8 @@
             blacklistEnabled = MelonPrefs.GetBool("AdvancedInvites", "BlacklistEnabled");
             whitelistEnabled = MelonPrefs.GetBool("AdvancedInvites", "WhitelistEnabled");
             SoundPlayer.Volume = MelonPrefs.GetFloat("AdvancedInvites", "NotificationVolume");
+            joinMeNotifyRequest = MelonPrefs.GetBool("AdvancedInvites", "JoinMeNotifyRequest");
+            ignoreBusyStatus = MelonPrefs.GetBool("AdvancedInvites", "IgnoreBusyStatus");
         }
 
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
@@ -136,9 +147,13 @@
                         Utilities.DeleteNotification(__0);
                         return;
                     }
+                    
+                    if (APIUser.CurrentUser.statusIsSetToDoNotDisturb
+                        && !ignoreBusyStatus) return;
 
                     if (whitelistEnabled && UserPermissionHandler.IsWhitelisted(__0.senderUserId))
                     {
+
                         if (!Utilities.AllowedToInvite())
                         {
                             SoundPlayer.PlayNotificationSound();
@@ -148,21 +163,36 @@
                         if (__0.details?.ContainsKey("platform") == true
                             && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
                         {
-                            // Bool's doesn't work and closes the game. just let it through
-                            //Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
-                            //Utilities.DeleteNotification(__0);
-                            SoundPlayer.PlayNotificationSound();
+                            if (!APIUser.CurrentUser.statusIsSetToJoinMe)
+                            {
+                                // Bool's doesn't work and closes the game. just let it through
+                                //Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
+                                //Utilities.DeleteNotification(__0);
+                                SoundPlayer.PlayNotificationSound();
+                            }
+
                             return;
                         }
 
-                        Utilities.AcceptInviteRequest(__0.senderUserId);
-                        Utilities.DeleteNotification(__0);
+                        // Double Sending
+                        if (!APIUser.CurrentUser.statusIsSetToJoinMe)
+                        {
+                            Utilities.AcceptInviteRequest(__0.senderUserId);
+                            Utilities.DeleteNotification(__0);
+                        }
+
+                        if (APIUser.CurrentUser.statusIsSetToJoinMe && joinMeNotifyRequest)
+                            SoundPlayer.PlayNotificationSound();
                     }
                     else
                     {
+                        if (Utilities.AllowedToInvite())
+                            if (APIUser.CurrentUser.statusIsSetToJoinMe
+                                && !joinMeNotifyRequest)
+                                return;
+                        
                         SoundPlayer.PlayNotificationSound();
                     }
-
                     return;
 
                 default:

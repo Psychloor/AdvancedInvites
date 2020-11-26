@@ -220,17 +220,6 @@ namespace AdvancedInvites
                 };
         }
 
-        // Don't ask alright. either i'm too tired or this is too weird.
-        // Taken directly from older vrchat source
-        /* public static bool IsPlatformCompatibleWithCurrentWorld(string platform)
-         {
-             if (CurrentRoom() == null) return false;
-             bool notUsingAndroid = !string.IsNullOrEmpty(platform) && platform.Contains("android");
-             if (CurrentRoom().supportedPlatforms == ApiModel.SupportedPlatforms.Android
-                 && !notUsingAndroid) return false;
-             return CurrentRoom().supportedPlatforms != ApiModel.SupportedPlatforms.StandaloneWindows || !notUsingAndroid;
-         }*/
-
         public static void AcceptInviteRequest(string receiverUserId)
         {
             ApiWorld currentRoom = CurrentRoom();
@@ -396,7 +385,7 @@ namespace AdvancedInvites
 
         private delegate void SendNotificationDelegate(string receiverUserId, string notificationType, string message, NotificationDetails notificationDetails);
 
-        internal delegate VRCUiManager VRCUiManagerDelegate();
+        private delegate VRCUiManager VRCUiManagerDelegate();
 
         private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts);
 

@@ -21,7 +21,9 @@ namespace AdvancedInvites
         // 1.4.2 Blacklist Worlds too
         // 1.4.3 Notification Sounds
         // 1.5.0 Update UIX and thanks to it. handle users/worlds in-game. all hail lord Knah
-        public const string Version = "1.5.1";
+        // 1.5.1 Fixed xref scanning for SendNotification
+        // 1.5.2 Respect Join Me and Do Not Disturb statuses with settings
+        public const string Version = "1.5.2";
 
     }
 
