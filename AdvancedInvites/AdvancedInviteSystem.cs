@@ -13,25 +13,26 @@
     using Transmtn.DTO.Notifications;
 
     using UnhollowerRuntimeLib.XrefScans;
-
 #if DEBUG
     using UnityEngine;
+
 #endif
 
     public sealed class AdvancedInviteSystem : MelonMod
     {
 
-    #if DEBUG
-        public override void OnUpdate()
-        {
-            if(Input.GetKeyDown(KeyCode.P)) Utilities.Request();
-        }
-    #endif
         private static bool whitelistEnabled = true;
 
         private static bool blacklistEnabled = true;
 
         private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
+
+    #if DEBUG
+        public override void OnUpdate()
+        {
+            if (Input.GetKeyDown(KeyCode.P)) Utilities.Request();
+        }
+    #endif
 
         public override void OnApplicationStart()
         {
@@ -122,6 +123,7 @@
                         Utilities.DeleteNotification(__0);
                         return;
                     }
+
                     SoundPlayer.PlayNotificationSound();
                     break;
 
@@ -146,7 +148,6 @@
                         if (__0.details?.ContainsKey("platform") == true
                             && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
                         {
-
                             // Bool's doesn't work and closes the game. just let it through
                             //Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
                             //Utilities.DeleteNotification(__0);
@@ -161,6 +162,7 @@
                     {
                         SoundPlayer.PlayNotificationSound();
                     }
+
                     return;
 
                 default:

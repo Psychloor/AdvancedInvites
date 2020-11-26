@@ -31,7 +31,7 @@ namespace AdvancedInvites
 
             // Social menu
             ExpansionKitApi.GetExpandedMenu(ExpandedMenu.SocialMenu).AddSimpleButton("AdvancedInvites\nRemove...", ShowUsers);
-            
+
             // Worlds Menu
             ExpansionKitApi.GetExpandedMenu(ExpandedMenu.WorldMenu).AddSimpleButton("AdvancedInvites\nRemove...", ShowWorlds);
 
@@ -41,11 +41,10 @@ namespace AdvancedInvites
 
         private static void ShowUsers()
         {
-            var userPermissionsPopup = ExpansionKitApi.CreateCustomFullMenuPopup(LayoutDescription.WideSlimList);
-            
+            ICustomShowableLayoutedMenu userPermissionsPopup = ExpansionKitApi.CreateCustomFullMenuPopup(LayoutDescription.WideSlimList);
+
             userPermissionsPopup.AddLabel("Blacklisted Users");
-            foreach (var blacklistedUser in UserPermissionHandler.BlacklistedUsers)
-            {
+            foreach (UserPermissionHandler.PermissionEntry blacklistedUser in UserPermissionHandler.BlacklistedUsers)
                 userPermissionsPopup.AddSimpleButton(
                     blacklistedUser.DisplayName,
                     () =>
@@ -55,12 +54,10 @@ namespace AdvancedInvites
                             UserPermissionHandler.SaveSettings();
                             ShowUsers();
                         });
-            }
-            
+
             userPermissionsPopup.AddSpacer();
             userPermissionsPopup.AddLabel("Whitelisted Users");
-            foreach (var whitelistedUser in UserPermissionHandler.WhitelistedUsers)
-            {
+            foreach (UserPermissionHandler.PermissionEntry whitelistedUser in UserPermissionHandler.WhitelistedUsers)
                 userPermissionsPopup.AddSimpleButton(
                     whitelistedUser.DisplayName,
                     () =>
@@ -70,8 +67,7 @@ namespace AdvancedInvites
                             UserPermissionHandler.SaveSettings();
                             ShowUsers();
                         });
-            }
-            
+
             userPermissionsPopup.AddSpacer();
             userPermissionsPopup.AddSimpleButton("Close", () => userPermissionsPopup.Hide());
             userPermissionsPopup.Show();
@@ -79,11 +75,10 @@ namespace AdvancedInvites
 
         private static void ShowWorlds()
         {
-            var worldsPermissionsPopup = ExpansionKitApi.CreateCustomFullMenuPopup(LayoutDescription.WideSlimList);
-            
+            ICustomShowableLayoutedMenu worldsPermissionsPopup = ExpansionKitApi.CreateCustomFullMenuPopup(LayoutDescription.WideSlimList);
+
             worldsPermissionsPopup.AddLabel("Blacklisted Worlds");
-            foreach (var blacklistedWorld in WorldPermissionHandler.BlacklistedWorlds)
-            {
+            foreach (WorldPermissionHandler.PermissionEntry blacklistedWorld in WorldPermissionHandler.BlacklistedWorlds)
                 worldsPermissionsPopup.AddSimpleButton(
                     blacklistedWorld.WorldName,
                     () =>
@@ -93,8 +88,7 @@ namespace AdvancedInvites
                             WorldPermissionHandler.SaveSettings();
                             ShowWorlds();
                         });
-            }
-            
+
             worldsPermissionsPopup.AddSpacer();
             worldsPermissionsPopup.AddSimpleButton("Close", () => worldsPermissionsPopup.Hide());
             worldsPermissionsPopup.Show();

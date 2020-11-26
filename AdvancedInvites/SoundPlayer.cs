@@ -9,22 +9,21 @@ namespace AdvancedInvites
     using MelonLoader;
 
     using UnityEngine;
-    using UnityEngine.Networking;
 
     public class SoundPlayer
     {
 
+        private const string AudioPath = "UserData/AdvancedInvites/Notification.ogg";
+
         private static SoundPlayer instance;
+
+        public static float Volume;
 
         private GameObject audioGameObject;
 
         private AudioSource audioSource;
 
         private AudioClip notificationSound;
-
-        private const string AudioPath = "UserData/AdvancedInvites/Notification.ogg";
-
-        public static float Volume;
 
         private SoundPlayer()
         { }
@@ -50,8 +49,8 @@ namespace AdvancedInvites
                 MelonLogger.Log("Notification Sound Not Found. Creating default one");
                 try
                 {
-                    using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AdvancedInvites.Notification.ogg");
-                    using var fs = new FileStream(AudioPath, FileMode.Create);
+                    using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AdvancedInvites.Notification.ogg");
+                    using FileStream fs = new FileStream(AudioPath, FileMode.Create);
 
                     // ReSharper disable once PossibleNullReferenceException
                     stream.CopyTo(fs);
@@ -69,10 +68,7 @@ namespace AdvancedInvites
             instance.notificationSound = request.GetAudioClip(false, false, AudioType.OGGVORBIS);
             instance.notificationSound.hideFlags = HideFlags.HideAndDontSave;
 
-            while (!request.isDone || instance.notificationSound.loadState == AudioDataLoadState.Loading)
-            {
-                yield return new WaitForEndOfFrame();
-            }
+            while (!request.isDone || instance.notificationSound.loadState == AudioDataLoadState.Loading) yield return new WaitForEndOfFrame();
 
             request.Dispose();
 

@@ -18,19 +18,9 @@ namespace AdvancedInvites
     using VRC.UI;
 
     using Boolean = Il2CppSystem.Boolean;
-    
+
     public static class Utilities
     {
-
-    #if DEBUG
-        public static void Request()
-        {
-            NotificationDetails details = new NotificationDetails();
-            details.Add("platform", Tools.Platform);
-
-            SendNotification(APIUser.CurrentUser.id, "requestInvite", string.Empty, details);
-        }
-    #endif
 
         private static CreatePortalDelegate ourCreatePortalDelegate;
 
@@ -52,25 +42,20 @@ namespace AdvancedInvites
             {
                 if (ourSendNotificationDelegate != null) return ourSendNotificationDelegate;
 
-                MethodInfo inviteFriendMethod = typeof(PageUserInfo).GetMethod(nameof(PageUserInfo.InviteFriend), BindingFlags.Public | BindingFlags.Instance);
-                foreach (XrefInstance xrefInstance in XrefScanner.XrefScan(inviteFriendMethod))
+                foreach (MethodInfo method in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))
                 {
-                    if (xrefInstance.Type != XrefType.Method) continue;
-                    MethodBase resolved = xrefInstance.TryResolve();
-                    if (resolved == null) continue;
+                    if (method.IsAbstract
+                        || method.IsVirtual) continue;
+                    if (!method.HasParameters(typeof(string), typeof(string), typeof(string), typeof(NotificationDetails))) continue;
 
-                    if (string.IsNullOrEmpty(resolved.Name)) continue;
-                    if (resolved.ReflectedType == null) continue;
-                    if (resolved.ReflectedType != typeof(NotificationManager)) continue;
-
-                    MethodInfo sendNotificationMethod = typeof(NotificationManager).GetMethod(resolved.Name, BindingFlags.Public | BindingFlags.Instance);
-                    if (sendNotificationMethod == null) continue;
-                    if (!sendNotificationMethod.HasParameters(typeof(string), typeof(string), typeof(string), typeof(NotificationDetails))) continue;
+                    if (!XrefScanner.UsedBy(method).Any(
+                            instance => instance.Type == XrefType.Method
+                                        && instance.TryResolve()?.ReflectedType?.Equals(typeof(PageUserInfo)) == true)) continue;
 
                     ourSendNotificationDelegate = (SendNotificationDelegate)Delegate.CreateDelegate(
                         typeof(SendNotificationDelegate),
                         NotificationManager.prop_NotificationManager_0,
-                        sendNotificationMethod);
+                        method);
                     return ourSendNotificationDelegate;
                 }
 
@@ -171,6 +156,16 @@ namespace AdvancedInvites
             }
         }
 
+    #if DEBUG
+        public static void Request()
+        {
+            NotificationDetails details = new NotificationDetails();
+            details.Add("platform", Tools.Platform);
+
+            SendNotification(APIUser.CurrentUser.id, "requestInvite", string.Empty, details);
+        }
+    #endif
+
         public static ApiWorld CurrentRoom()
         {
             return RoomManager.field_Internal_Static_ApiWorld_0;
@@ -241,6 +236,7 @@ namespace AdvancedInvites
             ApiWorld currentRoom = CurrentRoom();
             NotificationDetails details = new NotificationDetails();
             details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
+
             //details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
             details.Add("worldName", currentRoom.name);
 
@@ -298,7 +294,7 @@ namespace AdvancedInvites
         {
             GetVRCUiManager().HideScreen("POPUP");
         }
-        
+
         public static void ShowAlert(string title, string content, float timeOut = 10f)
         {
             GetShowAlertDelegate(title, content, timeOut);
