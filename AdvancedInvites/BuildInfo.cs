@@ -23,7 +23,8 @@ namespace AdvancedInvites
         // 1.5.0 Update UIX and thanks to it. handle users/worlds in-game. all hail lord Knah
         // 1.5.1 Fixed xref scanning for SendNotification
         // 1.5.2 Respect Join Me and Do Not Disturb statuses with settings
-        public const string Version = "1.5.2";
+        // 1.5.3 AddNotification patched into dead method only
+        public const string Version = "1.5.3";
 
     }
 

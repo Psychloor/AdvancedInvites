@@ -18,7 +18,6 @@
 
 #if DEBUG
     using UnityEngine;
-
 #endif
 
     public sealed class AdvancedInviteSystem : MelonMod
@@ -72,7 +71,7 @@
             {
                 // AddNotification - Method_Public_Void_Notification_EnumNPublicSealedvaAlReLo4vUnique_PDM_0 as of build 1010
                 // Also seems to be the first one each time more. otherwise, could use Where as the other ones are fake
-                MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
+                var addNotificationMethods = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(
                     m =>
                         {
                             if (!m.Name.StartsWith("Method_Public_Void_Notification_Enum")
@@ -82,11 +81,15 @@
                             // Some other ones for deleting? or something has strings in it
                             return XrefScanner.XrefScan(m).All(xrefInstance => xrefInstance.Type != XrefType.Global);
                         });
-
-                harmonyInstance.Patch(
-                    addNotificationMethod,
-                    postfix: new HarmonyMethod(
-                        typeof(AdvancedInviteSystem).GetMethod(nameof(AddNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
+                
+                foreach (MethodInfo notificationMethod in addNotificationMethods)
+                {
+                    harmonyInstance.Patch(
+                        notificationMethod,
+                        postfix: new HarmonyMethod(
+                            typeof(AdvancedInviteSystem).GetMethod(nameof(AddNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
+                }
+                
             }
             catch (Exception e)
             {
