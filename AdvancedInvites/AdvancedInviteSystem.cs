@@ -130,6 +130,9 @@
                 case "invite":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
+                    
+                    if (APIUser.CurrentUser.statusIsSetToDoNotDisturb
+                        && !ignoreBusyStatus) return;
 
                     string worldId = __0.details["worldId"].ToString().Split(':')[0];
                     if (blacklistEnabled && (UserPermissionHandler.IsBlacklisted(__0.senderUserId) || WorldPermissionHandler.IsBlacklisted(worldId)))
