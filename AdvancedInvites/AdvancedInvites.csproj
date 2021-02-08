@@ -49,9 +49,8 @@
       <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Il2CppSystem.Core.dll</HintPath>
         <Private>False</Private>
     </Reference>
-    <Reference Include="MelonLoader.ModHandler">
-      <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\MelonLoader.ModHandler.dll</HintPath>
-        <Private>False</Private>
+    <Reference Include="MelonLoader, Version=0.3.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Newtonsoft.Json.dll</HintPath>

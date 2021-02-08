@@ -15,7 +15,6 @@
     using UnhollowerRuntimeLib.XrefScans;
 
     using VRC.Core;
-
 #if DEBUG
     using UnityEngine;
 #endif
@@ -29,7 +28,7 @@
 
         private static bool joinMeNotifyRequest = true;
 
-        private static bool ignoreBusyStatus = false;
+        private static bool ignoreBusyStatus;
 
         private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
 
@@ -42,15 +41,14 @@
 
         public override void OnApplicationStart()
         {
-            MelonPrefs.RegisterCategory("AdvancedInvites", "Advanced Invites");
-
-            MelonPrefs.RegisterBool("AdvancedInvites", "DeleteNotifications", InviteHandler.DeleteNotifications, "Delete Notification After Successful Use");
-            MelonPrefs.RegisterBool("AdvancedInvites", "BlacklistEnabled", blacklistEnabled, "Blacklist System");
-            MelonPrefs.RegisterBool("AdvancedInvites", "WhitelistEnabled", whitelistEnabled, "Whitelist System");
-            MelonPrefs.RegisterFloat("AdvancedInvites", "NotificationVolume", .8f, "Notification Volume");
-            MelonPrefs.RegisterBool("AdvancedInvites", "JoinMeNotifyRequest", joinMeNotifyRequest, "Join Me Req Notification Sound");
-            MelonPrefs.RegisterBool("AdvancedInvites", "IgnoreBusyStatus", ignoreBusyStatus, "Ignore Busy Status");
-            OnModSettingsApplied();
+            MelonPreferences.CreateCategory("AdvancedInvites", "Advanced Invites");
+            MelonPreferences.CreateEntry("AdvancedInvites", "DeleteNotifications", InviteHandler.DeleteNotifications, "Delete Notification After Successful Use");
+            MelonPreferences.CreateEntry("AdvancedInvites", "BlacklistEnabled", blacklistEnabled, "Blacklist System");
+            MelonPreferences.CreateEntry("AdvancedInvites", "WhitelistEnabled", whitelistEnabled, "Whitelist System");
+            MelonPreferences.CreateEntry("AdvancedInvites", "NotificationVolume", .8f, "Notification Volume");
+            MelonPreferences.CreateEntry("AdvancedInvites", "JoinMeNotifyRequest", joinMeNotifyRequest, "Join Me Req Notification Sound");
+            MelonPreferences.CreateEntry("AdvancedInvites", "IgnoreBusyStatus", ignoreBusyStatus, "Ignore Busy Status");
+            OnPreferencesLoaded();
 
             try
             {
@@ -58,13 +56,13 @@
                 MethodInfo acceptNotificationMethod = typeof(QuickMenu).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
                     m => m.GetParameters().Length == 0 && m.XRefScanFor("AcceptNotification"));
 
-                harmonyInstance.Patch(
+                Harmony.Patch(
                     acceptNotificationMethod,
                     new HarmonyMethod(typeof(AdvancedInviteSystem).GetMethod(nameof(AcceptNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
             }
             catch (Exception e)
             {
-                MelonLogger.LogError("Error Patching AcceptNotification: " + e.Message);
+                MelonLogger.Error("Error Patching AcceptNotification: " + e.Message);
             }
 
             try
@@ -84,7 +82,7 @@
                 
                 foreach (MethodInfo notificationMethod in addNotificationMethods)
                 {
-                    harmonyInstance.Patch(
+                    Harmony.Patch(
                         notificationMethod,
                         postfix: new HarmonyMethod(
                             typeof(AdvancedInviteSystem).GetMethod(nameof(AddNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
@@ -93,7 +91,7 @@
             }
             catch (Exception e)
             {
-                MelonLogger.LogError("Error Patching AddNotification: " + e.Message);
+                MelonLogger.Error("Error Patching AddNotification: " + e.Message);
             }
 
             UserPermissionHandler.LoadSettings();
@@ -106,14 +104,24 @@
             SoundPlayer.Initialize();
         }
 
-        public override void OnModSettingsApplied()
+        public override void OnPreferencesSaved()
         {
-            InviteHandler.DeleteNotifications = MelonPrefs.GetBool("AdvancedInvites", "DeleteNotifications");
-            blacklistEnabled = MelonPrefs.GetBool("AdvancedInvites", "BlacklistEnabled");
-            whitelistEnabled = MelonPrefs.GetBool("AdvancedInvites", "WhitelistEnabled");
-            SoundPlayer.Volume = MelonPrefs.GetFloat("AdvancedInvites", "NotificationVolume");
-            joinMeNotifyRequest = MelonPrefs.GetBool("AdvancedInvites", "JoinMeNotifyRequest");
-            ignoreBusyStatus = MelonPrefs.GetBool("AdvancedInvites", "IgnoreBusyStatus");
+            InviteHandler.DeleteNotifications = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "DeleteNotifications");
+            blacklistEnabled = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "BlacklistEnabled");
+            whitelistEnabled = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "WhitelistEnabled");
+            SoundPlayer.Volume = MelonPreferences.GetEntryValue<float>("AdvancedInvites", "NotificationVolume");
+            joinMeNotifyRequest = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "JoinMeNotifyRequest");
+            ignoreBusyStatus = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "IgnoreBusyStatus");
+        }
+
+        public override void OnPreferencesLoaded()
+        {
+            InviteHandler.DeleteNotifications = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "DeleteNotifications");
+            blacklistEnabled = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "BlacklistEnabled");
+            whitelistEnabled = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "WhitelistEnabled");
+            SoundPlayer.Volume = MelonPreferences.GetEntryValue<float>("AdvancedInvites", "NotificationVolume");
+            joinMeNotifyRequest = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "JoinMeNotifyRequest");
+            ignoreBusyStatus = MelonPreferences.GetEntryValue<bool>("AdvancedInvites", "IgnoreBusyStatus");
         }
 
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
@@ -130,7 +138,15 @@
                 case "invite":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
-                    
+
+                #if DEBUG
+                    foreach (var key in __0.details.keys)
+                    {
+                        MelonLogger.Msg("Invite Details Key: " + key);
+                        MelonLogger.Msg("Invite Details Value: " + __0.details[key].ToString());
+                    }
+                #endif
+
                     if (APIUser.CurrentUser.statusIsSetToDoNotDisturb
                         && !ignoreBusyStatus) return;
 
@@ -153,7 +169,7 @@
                         Utilities.DeleteNotification(__0);
                         return;
                     }
-                    
+
                     if (APIUser.CurrentUser.statusIsSetToDoNotDisturb
                         && !ignoreBusyStatus) return;
 
@@ -196,9 +212,10 @@
                             if (APIUser.CurrentUser.statusIsSetToJoinMe
                                 && !joinMeNotifyRequest)
                                 return;
-                        
+
                         SoundPlayer.PlayNotificationSound();
                     }
+
                     return;
 
                 default:

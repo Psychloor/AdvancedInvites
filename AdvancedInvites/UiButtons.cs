@@ -15,7 +15,7 @@ namespace AdvancedInvites
 
         private static APIUser CurrentSelectedUser => QuickMenu.prop_QuickMenu_0.field_Private_APIUser_0;
 
-        private static APIUser CurrentSocialUser => Object.FindObjectOfType<PageUserInfo>()?.user;
+        private static APIUser CurrentSocialUser => Object.FindObjectOfType<PageUserInfo>()?.field_Public_APIUser_0;
 
         public static void Initialize()
         {
@@ -102,13 +102,13 @@ namespace AdvancedInvites
             if (WorldPermissionHandler.IsBlacklisted(currentWorld.id))
             {
                 WorldPermissionHandler.RemoveFromBlacklist(currentWorld.id);
-                MelonLogger.Log($"{currentWorld.name} removed from blacklist");
+                MelonLogger.Msg($"{currentWorld.name} removed from blacklist");
                 Utilities.QueueHudMessage($"{currentWorld.name} removed from blacklist");
             }
             else
             {
                 WorldPermissionHandler.AddToBlacklist(currentWorld);
-                MelonLogger.Log($"{currentWorld.name} added to blacklist");
+                MelonLogger.Msg($"{currentWorld.name} added to blacklist");
                 Utilities.QueueHudMessage($"{currentWorld.name} added to blacklist");
             }
 
@@ -122,14 +122,14 @@ namespace AdvancedInvites
             if (UserPermissionHandler.IsBlacklisted(user.id))
             {
                 UserPermissionHandler.RemoveFromBlacklist(user.id);
-                MelonLogger.Log($"{user.displayName} removed from blacklist");
+                MelonLogger.Msg($"{user.displayName} removed from blacklist");
                 Utilities.QueueHudMessage($"{user.displayName} removed from blacklist");
             }
             else
             {
                 if (UserPermissionHandler.IsWhitelisted(user.id)) UserPermissionHandler.RemoveFromWhitelist(user.id);
                 UserPermissionHandler.AddToBlacklist(user);
-                MelonLogger.Log($"{user.displayName} added to blacklist");
+                MelonLogger.Msg($"{user.displayName} added to blacklist");
                 Utilities.QueueHudMessage($"{user.displayName} added to blacklist");
             }
 
@@ -143,14 +143,14 @@ namespace AdvancedInvites
             if (UserPermissionHandler.IsWhitelisted(user.id))
             {
                 UserPermissionHandler.RemoveFromWhitelist(user.id);
-                MelonLogger.Log($"{user.displayName} removed from whitelist");
+                MelonLogger.Msg($"{user.displayName} removed from whitelist");
                 Utilities.QueueHudMessage($"{user.displayName} removed from whitelist");
             }
             else
             {
                 if (UserPermissionHandler.IsBlacklisted(user.id)) UserPermissionHandler.RemoveFromBlacklist(user.id);
                 UserPermissionHandler.AddToWhitelist(user);
-                MelonLogger.Log($"{user.displayName} added to whitelist");
+                MelonLogger.Msg($"{user.displayName} added to whitelist");
                 Utilities.QueueHudMessage($"{user.displayName} added to whitelist");
             }
 

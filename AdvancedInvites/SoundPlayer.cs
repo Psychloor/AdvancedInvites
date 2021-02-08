@@ -42,11 +42,11 @@ namespace AdvancedInvites
 
         private static IEnumerator LoadNotificationSound()
         {
-            MelonLogger.Log("Loading Notification Sound");
+            MelonLogger.Msg("Loading Notification Sound");
 
             if (!File.Exists(AudioPath))
             {
-                MelonLogger.Log("Notification Sound Not Found. Creating default one");
+                MelonLogger.Msg("Notification Sound Not Found. Creating default one");
                 try
                 {
                     using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AdvancedInvites.Notification.ogg");
@@ -59,7 +59,7 @@ namespace AdvancedInvites
                 }
                 catch (Exception e)
                 {
-                    MelonLogger.LogError("Something went wrong writing the file to UserData/AdvancedInvites/\n" + e);
+                    MelonLogger.Error("Something went wrong writing the file to UserData/AdvancedInvites/\n" + e);
                     yield break;
                 }
             }
@@ -73,9 +73,9 @@ namespace AdvancedInvites
             request.Dispose();
 
             if (instance.notificationSound.loadState == AudioDataLoadState.Loaded)
-                MelonLogger.Log("Notification Sound Loaded");
+                MelonLogger.Msg("Notification Sound Loaded");
             else if (instance.notificationSound.loadState == AudioDataLoadState.Failed)
-                MelonLogger.LogError("Failed To Load Notification Sound");
+                MelonLogger.Error("Failed To Load Notification Sound");
         }
 
         public static void Initialize()

@@ -48,9 +48,9 @@ namespace AdvancedInvites
                         || method.IsVirtual) continue;
                     if (!method.HasParameters(typeof(string), typeof(string), typeof(string), typeof(NotificationDetails))) continue;
 
-                    if (!XrefScanner.UsedBy(method).Any(
+                    /*if (!XrefScanner.UsedBy(method).Any(
                             instance => instance.Type == XrefType.Method
-                                        && instance.TryResolve()?.ReflectedType?.Equals(typeof(PageUserInfo)) == true)) continue;
+                                        && instance.TryResolve()?.ReflectedType?.Equals(typeof(PageUserInfo)) == true)) continue;*/
 
                     ourSendNotificationDelegate = (SendNotificationDelegate)Delegate.CreateDelegate(
                         typeof(SendNotificationDelegate),
@@ -59,7 +59,7 @@ namespace AdvancedInvites
                     return ourSendNotificationDelegate;
                 }
 
-                MelonLogger.LogError("Failed to find SendNotification Method");
+                MelonLogger.Error("Failed to find SendNotification Method");
                 return null;
             }
         }
@@ -350,7 +350,7 @@ namespace AdvancedInvites
 
                             return found;
                         });
-            MelonLogger.LogWarning($"XRefScanForMethod \"{methodBase}\" has all null/empty parameters. Returning false");
+            MelonLogger.Warning($"XRefScanForMethod \"{methodBase}\" has all null/empty parameters. Returning false");
             return false;
         }
 
@@ -379,7 +379,7 @@ namespace AdvancedInvites
 
                             return found;
                         });
-            MelonLogger.LogWarning($"XRefScanMethodCount \"{methodBase}\" has all null/empty parameters. Returning -1");
+            MelonLogger.Warning($"XRefScanMethodCount \"{methodBase}\" has all null/empty parameters. Returning -1");
             return -1;
         }
 
