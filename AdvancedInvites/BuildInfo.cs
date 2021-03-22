@@ -25,7 +25,8 @@ namespace AdvancedInvites
         // 1.5.2 Respect Join Me and Do Not Disturb statuses with settings
         // 1.5.3 AddNotification patched into dead method only
         // 1.5.4 DoNotDisturb/Busy played sound for invites
-        public const string Version = "1.5.4";
+        // 1.6.0 Updated to Build 1063
+        public const string Version = "1.6.0";
 
     }
 
