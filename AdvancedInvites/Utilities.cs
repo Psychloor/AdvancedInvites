@@ -234,8 +234,7 @@ namespace AdvancedInvites
             ApiWorld currentRoom = CurrentRoom();
             NotificationDetails details = new NotificationDetails();
             details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
-
-            //details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
+            details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
             details.Add("worldName", currentRoom.name);
 
             SendNotification(receiverUserId, "invite", string.Empty, details);

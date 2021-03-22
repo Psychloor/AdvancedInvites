@@ -1,4 +1,7 @@
-﻿namespace AdvancedInvites
+﻿using System.Runtime.InteropServices;
+using UnhollowerBaseLib;
+
+namespace AdvancedInvites
 {
 
     using System;
@@ -32,6 +35,11 @@
         private static bool ignoreBusyStatus;
 
         private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void AcceptNotificationDelegate(IntPtr thisPtr, IntPtr notification);
+
+        private static AcceptNotificationDelegate acceptNotificationDelegate;
 
     #if DEBUG
         public override void OnUpdate()
@@ -53,15 +61,23 @@
 
             try
             {
-                // Appears to be NotificationManager.Method_Private_Void_Notification_1
-                var acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                unsafe
+                {
+                    // Appears to be NotificationManager.Method_Private_Void_Notification_1
+                    var acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
                         m => 
-                             m.GetParameters().Length == 1 && 
-                             m.GetParameters()[0].ParameterType == typeof(Notification) && 
-                             m.XRefScanFor("AcceptNotification for notification:")
-                             );
-                Harmony.Patch(acceptNotificationMethod,
-                    new HarmonyMethod(typeof(AdvancedInviteSystem).GetMethod(nameof(AcceptNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
+                            m.GetParameters().Length == 1 && 
+                            m.GetParameters()[0].ParameterType == typeof(Notification) && 
+                            m.XRefScanFor("AcceptNotification for notification:")
+                    );
+                    var originalMethod = *(IntPtr*) (IntPtr) UnhollowerUtils
+                        .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(acceptNotificationMethod)
+                        .GetValue(null);
+                    Imports.Hook((IntPtr) (&originalMethod),
+                        typeof(AdvancedInviteSystem).GetMethod(nameof(AcceptNotificationPatch),
+                            BindingFlags.Static | BindingFlags.NonPublic)!.MethodHandle.GetFunctionPointer());
+                    acceptNotificationDelegate = Marshal.GetDelegateForFunctionPointer<AcceptNotificationDelegate>(originalMethod);
+                }
             }
             catch (Exception e)
             {
@@ -123,7 +139,6 @@
         private static void AddNotificationPatch(Notification __0)
         {
             if (__0 == null) return;
-            //if (__0.notificationType == null) return;
             // Original code doesn't handle much outside worlds so
             if (Utilities.CurrentRoom() == null
                 || Utilities.CurrentWorldInstance() == null) return;
@@ -133,6 +148,7 @@
                 case "invite":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
+                    
                 #if DEBUG
                     foreach (var key in __0.details.keys)
                     {
@@ -217,15 +233,22 @@
             }
         }
 
-        private static bool AcceptNotificationPatch(Notification __0)
+        private static void AcceptNotificationPatch(IntPtr thisPtr, IntPtr notificationPtr)
         {
-            if (__0?.notificationType == null) return true;
-            if (__0.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                InviteHandler.HandleInvite(__0);
-                return false;
+                var notification = new Notification(notificationPtr);
+                if (notification.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase))
+                {
+                    InviteHandler.HandleInvite(notification);
+                    return;
+                }
             }
-            return true;
+            catch(Exception e)
+            {
+                MelonLogger.Error($"Exception in accept notification patch: {e}");
+            }
+            acceptNotificationDelegate(thisPtr, notificationPtr);
         }
     }
 }
