@@ -1,3 +1,5 @@
+using Il2CppSystem.Collections.Generic;
+
 namespace AdvancedInvites
 {
 
@@ -5,13 +7,9 @@ namespace AdvancedInvites
     using System.Linq;
     using System.Reflection;
 
-    using Il2CppSystem.Collections.Generic;
-
     using MelonLoader;
 
     using Transmtn.DTO.Notifications;
-
-    using UnhollowerBaseLib;
 
     using UnhollowerRuntimeLib.XrefScans;
 
@@ -50,17 +48,11 @@ namespace AdvancedInvites
                 {
                     if (method.IsAbstract
                         || method.IsVirtual) continue;
-                    if (!method.HasParameters(
-                            typeof(string),
-                            typeof(string),
-                            typeof(string),
-                            typeof(string),
-                            typeof(NotificationDetails),
-                            typeof(Il2CppStructArray<byte>))) continue;
+                    if (!method.HasParameters(typeof(string), typeof(string), typeof(string), typeof(NotificationDetails))) continue;
 
-                    if (!XrefScanner.UsedBy(method).Any(
+                    /*if (!XrefScanner.UsedBy(method).Any(
                             instance => instance.Type == XrefType.Method
-                                        && instance.TryResolve()?.ReflectedType?.Equals(typeof(PageUserInfo)) == true)) continue;
+                                        && instance.TryResolve()?.ReflectedType?.Equals(typeof(PageUserInfo)) == true)) continue;*/
 
                     ourSendNotificationDelegate = (SendNotificationDelegate)Delegate.CreateDelegate(
                         typeof(SendNotificationDelegate),
@@ -107,13 +99,17 @@ namespace AdvancedInvites
             get
             {
                 if (ourDeleteNotificationDelegate != null) return ourDeleteNotificationDelegate;
-
-                MethodInfo deleteMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                    m => m.Name.StartsWith("method_public_void", StringComparison.OrdinalIgnoreCase) && m.GetParameters().Length == 1
-                                                                                          && m.GetParameters()[0].ParameterType == typeof(Notification)
-                                                                                          && m.XRefScanFor("voteToKick")
-                                                                                          && m.XRefScanForMethod(null, nameof(VRCWebSocketsManager))
-                                                                                          && m.XRefScanMethodCount(null, nameof(NotificationManager)) >= 2);
+                // Appears to be NotificationManager.Method_Public_Void_Notification_1(notification); 
+                MethodInfo deleteMethod = typeof(NotificationManager)
+                    .GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(m => 
+                        //m.XRefScanFor("voteToKick") && idk but this messes it up somehow and it works without it to soo uhhh *yeet*
+                        m.GetParameters().Length == 1 &&
+                        m.GetParameters()[0].ParameterType == typeof(Notification) &&
+                        m.Name.StartsWith("Method_Public_Void_") && 
+                        m.XRefScanForMethod(null, nameof(VRCWebSocketsManager)) && 
+                        m.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) == 2 &&
+                        m.XRefScanMethodCount(null, nameof(NotificationManager)) == 5
+                    );
                 ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
                     typeof(DeleteNotificationDelegate),
                     NotificationManager.field_Private_Static_NotificationManager_0,
@@ -175,7 +171,7 @@ namespace AdvancedInvites
             NotificationDetails details = new NotificationDetails();
             details.Add("platform", Tools.Platform);
 
-            SendNotification(APIUser.CurrentUser.displayName, APIUser.CurrentUser.id, "requestInvite", string.Empty, details);
+            SendNotification(APIUser.CurrentUser.id, "requestInvite", string.Empty, details);
         }
     #endif
 
@@ -233,25 +229,25 @@ namespace AdvancedInvites
                 };
         }
 
-        public static void AcceptInviteRequest(string receiverUserId, string receiverName)
+        public static void AcceptInviteRequest(string receiverUserId)
         {
             ApiWorld currentRoom = CurrentRoom();
             NotificationDetails details = new NotificationDetails();
             details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
-            // details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
+            details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
             details.Add("worldName", currentRoom.name);
 
-            SendNotification(receiverName, receiverUserId, "invite", string.Empty, details);
+            SendNotification(receiverUserId, "invite", string.Empty, details);
         }
 
         // Since stuff bugs out if you do boxed booleans this will remain here unused till i might figure out something (or someone else does)
-        public static void SendIncompatiblePlatformNotification(string receiverUserId, string receiverName)
+        public static void SendIncompatiblePlatformNotification(string receiverUserId)
         {
             NotificationDetails details = new NotificationDetails();
             details.Add("incompatible", new Boolean { m_value = true }.BoxIl2CppObject());
             details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject());
 
-            SendNotification(receiverName, receiverUserId, "invite", string.Empty, details);
+            SendNotification(receiverUserId, "invite", string.Empty, details);
         }
 
         public static bool AllowedToInvite()
@@ -281,36 +277,6 @@ namespace AdvancedInvites
             GetDeleteNotificationDelegate(notification);
         }
 
-        #if DEBUG
-        public static void QuickAnalyze(this MethodInfo methodInfo)
-        {
-            if (methodInfo == null) return;
-            MelonLogger.Msg("Analyzing Method: " + methodInfo.Name);
-            foreach (XrefInstance instance in XrefScanner.XrefScan(methodInfo))
-            {
-                try
-                {
-                    switch (instance.Type)
-                    {
-                        case XrefType.Global:
-                            MelonLogger.Msg("\tGlobal Instance: " + instance.ReadAsObject()?.ToString());
-                            break;
-                        case XrefType.Method:
-                            var resolved = instance.TryResolve();
-                            MelonLogger.Msg($"\tMethod Instance: {resolved?.ReflectedType?.Name} {resolved?.Name}");
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                }
-                catch
-                {
-                    MelonLogger.Msg($"\tError on {instance.Type} Instance");
-                }
-            }
-        }
-        #endif
-        
         public static Notification GetCurrentActiveNotification()
         {
             return QuickMenu.prop_QuickMenu_0.field_Private_Notification_0;
@@ -425,13 +391,7 @@ namespace AdvancedInvites
             return -1;
         }
 
-        private delegate void SendNotificationDelegate(
-            string receiverUserName,
-            string receiverUserId,
-            string notificationType,
-            string message,
-            NotificationDetails notificationDetails,
-            Il2CppStructArray<byte> picDataIGuess = null);
+        private delegate void SendNotificationDelegate(string receiverUserId, string notificationType, string message, NotificationDetails notificationDetails);
 
         private delegate VRCUiManager VRCUiManagerDelegate();
 

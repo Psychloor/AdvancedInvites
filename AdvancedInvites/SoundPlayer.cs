@@ -1,3 +1,5 @@
+
+
 namespace AdvancedInvites
 {
 
@@ -7,7 +9,7 @@ namespace AdvancedInvites
     using System.Reflection;
 
     using Il2CppSystem.Collections.Generic;
-
+    
     using MelonLoader;
 
     using UnityEngine;
