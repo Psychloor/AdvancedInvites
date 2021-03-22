@@ -24,7 +24,7 @@ namespace AdvancedInvites
         // 1.5.1 Fixed xref scanning for SendNotification
         // 1.5.2 Respect Join Me and Do Not Disturb statuses with settings
         // 1.5.3 AddNotification patched into dead method only
-        // 1.5.4 DoNotDisturb/Busy played sund for invites
+        // 1.5.4 DoNotDisturb/Busy played sound for invites
         public const string Version = "1.5.4";
 
     }
