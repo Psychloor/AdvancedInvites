@@ -102,14 +102,15 @@ namespace AdvancedInvites
                 // Appears to be NotificationManager.Method_Public_Void_Notification_1(notification); 
                 MethodInfo deleteMethod = typeof(NotificationManager)
                     .GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(m => 
-                        m.XRefScanFor("voteToKick") &&
+                        //m.XRefScanFor("voteToKick") && idk but this messes it up somehow and it works without it to soo uhhh *yeet*
                         m.GetParameters().Length == 1 &&
                         m.GetParameters()[0].ParameterType == typeof(Notification) &&
-                        m.Name.StartsWith("Method_Public_Void_")
+                        m.Name.StartsWith("Method_Public_Void_") && 
+                        m.XRefScanForMethod(null, nameof(VRCWebSocketsManager)) && 
+                        m.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) == 2 &&
+                        m.XRefScanMethodCount(null, nameof(NotificationManager)) == 5
                     );
                 MelonLogger.Msg(deleteMethod.Name);
-                    //m => m.XRefScanFor("voteToKick") && m.XRefScanForMethod(null, nameof(VRCWebSocketsManager))
-                    //                                 && m.XRefScanMethodCount(null, nameof(NotificationManager)) == 2);
                 ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
                     typeof(DeleteNotificationDelegate),
                     NotificationManager.field_Private_Static_NotificationManager_0,
