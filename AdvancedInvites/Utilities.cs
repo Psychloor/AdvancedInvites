@@ -4,12 +4,15 @@ namespace AdvancedInvites
 {
 
     using System;
+    using System.Collections;
     using System.Linq;
     using System.Reflection;
 
     using MelonLoader;
 
     using Transmtn.DTO.Notifications;
+
+    using UnhollowerBaseLib;
 
     using UnhollowerRuntimeLib.XrefScans;
 
@@ -48,11 +51,17 @@ namespace AdvancedInvites
                 {
                     if (method.IsAbstract
                         || method.IsVirtual) continue;
-                    if (!method.HasParameters(typeof(string), typeof(string), typeof(string), typeof(NotificationDetails))) continue;
+                    if (!method.HasParameters(
+                            typeof(string),
+                            typeof(string),
+                            typeof(string),
+                            typeof(string),
+                            typeof(NotificationDetails),
+                            typeof(Il2CppStructArray<byte>))) continue;
 
-                    /*if (!XrefScanner.UsedBy(method).Any(
+                    if (!XrefScanner.UsedBy(method).Any(
                             instance => instance.Type == XrefType.Method
-                                        && instance.TryResolve()?.ReflectedType?.Equals(typeof(PageUserInfo)) == true)) continue;*/
+                                        && instance.TryResolve()?.ReflectedType?.Equals(typeof(PageUserInfo)) == true)) continue;
 
                     ourSendNotificationDelegate = (SendNotificationDelegate)Delegate.CreateDelegate(
                         typeof(SendNotificationDelegate),
@@ -171,7 +180,7 @@ namespace AdvancedInvites
             NotificationDetails details = new NotificationDetails();
             details.Add("platform", Tools.Platform);
 
-            SendNotification(APIUser.CurrentUser.id, "requestInvite", string.Empty, details);
+            SendNotification(APIUser.CurrentUser.displayName, APIUser.CurrentUser.id, "requestInvite", string.Empty, details);
         }
     #endif
 
@@ -229,25 +238,28 @@ namespace AdvancedInvites
                 };
         }
 
-        public static void AcceptInviteRequest(string receiverUserId)
+        public static void AcceptInviteRequest(string receiverUserId, string receiverUserName)
         {
             ApiWorld currentRoom = CurrentRoom();
             NotificationDetails details = new NotificationDetails();
             details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
-            details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
+            // don't ask me why, ask vrchat why they added instanceId as
+            // a direct copy of worldId with both having both world and instance id
+            details.Add("instanceId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
+            //details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
             details.Add("worldName", currentRoom.name);
 
-            SendNotification(receiverUserId, "invite", string.Empty, details);
+            SendNotification(receiverUserName, receiverUserId, "invite", string.Empty, details);
         }
 
         // Since stuff bugs out if you do boxed booleans this will remain here unused till i might figure out something (or someone else does)
-        public static void SendIncompatiblePlatformNotification(string receiverUserId)
+        public static void SendIncompatiblePlatformNotification(string receiverUserId, string receiverUserName)
         {
             NotificationDetails details = new NotificationDetails();
             details.Add("incompatible", new Boolean { m_value = true }.BoxIl2CppObject());
             details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject());
 
-            SendNotification(receiverUserId, "invite", string.Empty, details);
+            SendNotification(receiverUserName,receiverUserId, "invite", string.Empty, details);
         }
 
         public static bool AllowedToInvite()
@@ -391,7 +403,13 @@ namespace AdvancedInvites
             return -1;
         }
 
-        private delegate void SendNotificationDelegate(string receiverUserId, string notificationType, string message, NotificationDetails notificationDetails);
+        private delegate void SendNotificationDelegate(
+            string receiverUserName,
+            string receiverUserId,
+            string notificationType,
+            string message,
+            NotificationDetails notificationDetails,
+            Il2CppStructArray<byte> picDataIGuess = null);
 
         private delegate VRCUiManager VRCUiManagerDelegate();
 
