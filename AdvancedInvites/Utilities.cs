@@ -147,8 +147,8 @@ namespace AdvancedInvites
             get
             {
                 if (ourShowPopupWindowBothDelegate != null) return ourShowPopupWindowBothDelegate;
-                MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                    m => m.GetParameters().Length == 7 && m.XRefScanFor("Popups/StandardPopupV2"));
+                MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
+                    m => m.Name.IndexOf("pdm", StringComparison.OrdinalIgnoreCase) == -1 && m.GetParameters().Length == 7 && m.XRefScanFor("Popups/StandardPopupV2"));
 
                 ourShowPopupWindowBothDelegate = (ShowPopupWindowBothDelegate)Delegate.CreateDelegate(
                     typeof(ShowPopupWindowBothDelegate),
@@ -163,7 +163,7 @@ namespace AdvancedInvites
             get
             {
                 if (ourShowPopupWindowSingleDelegate != null) return ourShowPopupWindowSingleDelegate;
-                MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
                     m => m.GetParameters().Length == 5 && m.XRefScanFor("Popups/StandardPopupV2"));
 
                 ourShowPopupWindowSingleDelegate = (ShowPopupWindowSingleDelegate)Delegate.CreateDelegate(
