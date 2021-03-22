@@ -110,7 +110,6 @@ namespace AdvancedInvites
                         m.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) == 2 &&
                         m.XRefScanMethodCount(null, nameof(NotificationManager)) == 5
                     );
-                MelonLogger.Msg(deleteMethod.Name);
                 ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
                     typeof(DeleteNotificationDelegate),
                     NotificationManager.field_Private_Static_NotificationManager_0,

@@ -123,7 +123,7 @@
         private static void AddNotificationPatch(Notification __0)
         {
             if (__0 == null) return;
-
+            //if (__0.notificationType == null) return;
             // Original code doesn't handle much outside worlds so
             if (Utilities.CurrentRoom() == null
                 || Utilities.CurrentWorldInstance() == null) return;
@@ -219,11 +219,13 @@
 
         private static bool AcceptNotificationPatch(Notification __0)
         {
-            if (!__0.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase)) return true;
-            InviteHandler.HandleInvite(__0);
-            return false;
+            if (__0?.notificationType == null) return true;
+            if (__0.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase))
+            {
+                InviteHandler.HandleInvite(__0);
+                return false;
+            }
+            return true;
         }
-
     }
-
 }
