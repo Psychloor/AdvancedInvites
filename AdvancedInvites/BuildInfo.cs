@@ -26,7 +26,8 @@ namespace AdvancedInvites
         // 1.5.3 AddNotification patched into dead method only
         // 1.5.4 DoNotDisturb/Busy played sound for invites
         // 1.6.0 Updated to Build 1063
-        public const string Version = "1.6.0";
+        // 1.6.1 Popupwindow Single to First
+        public const string Version = "1.6.1";
 
     }
 
