@@ -18,7 +18,8 @@
 #if DEBUG
     using UnityEngine;
 #endif
-
+    
+    
     public sealed class AdvancedInviteSystem : MelonMod
     {
 
@@ -52,12 +53,14 @@
 
             try
             {
-                // Accept Notification
-                MethodInfo acceptNotificationMethod = typeof(QuickMenu).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                    m => m.GetParameters().Length == 0 && m.XRefScanFor("AcceptNotification"));
-
-                Harmony.Patch(
-                    acceptNotificationMethod,
+                // Appears to be NotificationManager.Method_Private_Void_Notification_1
+                var acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                        m => 
+                             m.GetParameters().Length == 1 && 
+                             m.GetParameters()[0].ParameterType == typeof(Notification) && 
+                             m.XRefScanFor("AcceptNotification for notification:")
+                             );
+                Harmony.Patch(acceptNotificationMethod,
                     new HarmonyMethod(typeof(AdvancedInviteSystem).GetMethod(nameof(AcceptNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
             }
             catch (Exception e)
@@ -67,27 +70,19 @@
 
             try
             {
-                // AddNotification - Method_Public_Void_Notification_EnumNPublicSealedvaAlReLo4vUnique_PDM_0 as of build 1010
-                // Also seems to be the first one each time more. otherwise, could use Where as the other ones are fake
-                var addNotificationMethods = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(
-                    m =>
-                        {
-                            if (!m.Name.StartsWith("Method_Public_Void_Notification_Enum")
-                                || m.GetParameters().Length != 2
-                                || m.GetParameters()[0].ParameterType != typeof(Notification)) return false;
-
-                            // Some other ones for deleting? or something has strings in it
-                            return XrefScanner.XrefScan(m).All(xrefInstance => xrefInstance.Type != XrefType.Global);
-                        });
-                
-                foreach (MethodInfo notificationMethod in addNotificationMethods)
-                {
-                    Harmony.Patch(
-                        notificationMethod,
-                        postfix: new HarmonyMethod(
-                            typeof(AdvancedInviteSystem).GetMethod(nameof(AddNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
-                }
-                
+                //Appears to be NotificationManager.Method_Private_String_Notification_1
+                var addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                    m => 
+                        m.Name.StartsWith("Method_Private_") &&
+                        m.ReturnType == typeof(String) &&
+                        m.GetParameters().Length == 1 && 
+                        m.GetParameters()[0].ParameterType == typeof(Notification) && 
+                        m.XRefScanFor("imageUrl")
+                );
+                Harmony.Patch(
+                    addNotificationMethod,
+                    postfix: new HarmonyMethod(
+                        typeof(AdvancedInviteSystem).GetMethod(nameof(AddNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
             }
             catch (Exception e)
             {
@@ -138,7 +133,6 @@
                 case "invite":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
-
                 #if DEBUG
                     foreach (var key in __0.details.keys)
                     {
@@ -223,11 +217,10 @@
             }
         }
 
-        private static bool AcceptNotificationPatch()
+        private static bool AcceptNotificationPatch(Notification __0)
         {
-            Notification notification = Utilities.GetCurrentActiveNotification();
-            if (!notification.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase)) return true;
-            InviteHandler.HandleInvite(notification);
+            if (!__0.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase)) return true;
+            InviteHandler.HandleInvite(__0);
             return false;
         }
 

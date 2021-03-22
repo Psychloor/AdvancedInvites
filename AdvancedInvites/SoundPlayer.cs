@@ -1,3 +1,5 @@
+
+
 namespace AdvancedInvites
 {
 
@@ -6,6 +8,8 @@ namespace AdvancedInvites
     using System.IO;
     using System.Reflection;
 
+    using Il2CppSystem.Collections.Generic;
+    
     using MelonLoader;
 
     using UnityEngine;
@@ -64,7 +68,7 @@ namespace AdvancedInvites
                 }
             }
 
-            WWW request = new WWW(Path.GetFullPath(AudioPath));
+            WWW request = new WWW(Path.GetFullPath(AudioPath), null, new Dictionary<string, string>());
             instance.notificationSound = request.GetAudioClip(false, false, AudioType.OGGVORBIS);
             instance.notificationSound.hideFlags = HideFlags.HideAndDontSave;
 

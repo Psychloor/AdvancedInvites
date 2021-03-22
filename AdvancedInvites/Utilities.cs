@@ -1,3 +1,5 @@
+using Il2CppSystem.Collections.Generic;
+
 namespace AdvancedInvites
 {
 
@@ -97,10 +99,17 @@ namespace AdvancedInvites
             get
             {
                 if (ourDeleteNotificationDelegate != null) return ourDeleteNotificationDelegate;
-
-                MethodInfo deleteMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                    m => m.XRefScanFor("voteToKick") && m.XRefScanForMethod(null, nameof(VRCWebSocketsManager))
-                                                     && m.XRefScanMethodCount(null, nameof(NotificationManager)) == 2);
+                // Appears to be NotificationManager.Method_Public_Void_Notification_1(notification); 
+                MethodInfo deleteMethod = typeof(NotificationManager)
+                    .GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(m => 
+                        m.XRefScanFor("voteToKick") &&
+                        m.GetParameters().Length == 1 &&
+                        m.GetParameters()[0].ParameterType == typeof(Notification) &&
+                        m.Name.StartsWith("Method_Public_Void_")
+                    );
+                MelonLogger.Msg(deleteMethod.Name);
+                    //m => m.XRefScanFor("voteToKick") && m.XRefScanForMethod(null, nameof(VRCWebSocketsManager))
+                    //                                 && m.XRefScanMethodCount(null, nameof(NotificationManager)) == 2);
                 ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
                     typeof(DeleteNotificationDelegate),
                     NotificationManager.field_Private_Static_NotificationManager_0,
