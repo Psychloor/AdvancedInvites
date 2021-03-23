@@ -41,19 +41,19 @@ namespace AdvancedInvites
             }
         }
 
-        public static string GetTitle(string username)
+        public static string GetTitle(string username, string worldName, string instanceType)
         {
-            return localizedText.Title.Replace("@Username", username);
+            return localizedText.Title.Replace("@Username", username).Replace("@WorldName", worldName).Replace("@InstanceType", instanceType);
         }
 
-        public static string GetPublicPopup(string worldName, string instanceType)
+        public static string GetPublicPopup(string username,string worldName, string instanceType)
         {
-            return localizedText.PublicPopup.Replace("@WorldName", worldName).Replace("@InstanceType", instanceType);
+            return localizedText.PublicPopup.Replace("@Username", username).Replace("@WorldName", worldName).Replace("@InstanceType", instanceType);
         }
         
-        public static string GetPrivatePopup(string worldName, string instanceType)
+        public static string GetPrivatePopup(string username,string worldName, string instanceType)
         {
-            return localizedText.PrivatePopup.Replace("@WorldName", worldName).Replace("@InstanceType", instanceType);
+            return localizedText.PrivatePopup.Replace("@Username", username).Replace("@WorldName", worldName).Replace("@InstanceType", instanceType);
         }
 
         public static string GetJoinButton() => localizedText.JoinButton;

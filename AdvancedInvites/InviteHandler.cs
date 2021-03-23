@@ -25,14 +25,18 @@ namespace AdvancedInvites
             worldInstance = notification.details["worldId"].ToString();
 
             ApiWorldInstance.AccessType accessType = Utilities.GetAccessType(worldInstance.Split(':')[1]);
+
+            string worldName = notification.details["worldName"].ToString();
+            string instanceType = Utilities.GetAccessName(accessType);
+            
             switch (accessType)
             {
                 case ApiWorldInstance.AccessType.Public:
                 case ApiWorldInstance.AccessType.FriendsOfGuests:
                 case ApiWorldInstance.AccessType.InvitePlus:
                     Utilities.ShowPopupWindow(
-                        Localization.GetTitle(notification.senderUsername),
-                        Localization.GetPublicPopup(notification.details["worldName"].ToString(), Utilities.GetAccessName(accessType)),
+                        Localization.GetTitle(notification.senderUsername, worldName, instanceType),
+                        Localization.GetPublicPopup(notification.senderUsername, worldName, instanceType),
                         Localization.GetJoinButton(),
                         JoinYourself,
                         Localization.GetDropPortalButton(),
@@ -42,8 +46,8 @@ namespace AdvancedInvites
                 case ApiWorldInstance.AccessType.FriendsOnly:
                 case ApiWorldInstance.AccessType.InviteOnly:
                     Utilities.ShowPopupWindow(
-                        Localization.GetTitle(notification.senderUsername),
-                        Localization.GetPrivatePopup(notification.details["worldName"].ToString(), Utilities.GetAccessName(accessType)),
+                        Localization.GetTitle(notification.senderUsername, worldName, instanceType),
+                        Localization.GetPrivatePopup(notification.senderUsername, worldName, instanceType),
                         Localization.GetJoinButton(),
                         JoinYourself);
                     break;
