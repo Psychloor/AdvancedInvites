@@ -5,8 +5,6 @@ Doesn't let you drop a portal if it's Friends only or Private(Invite) only.
 
 You can also delete notifications after successful use. (Settings)
 
-Custom notification sound can be changed by replacing/adding the sound file "UserData/AdvancedInvites/Notification.ogg"
-
 Notification sound taken from: http://freesoundeffect.net/sound/musical-game-elements-05-sound-effect
 
 # Black/Whitelist system
@@ -18,6 +16,7 @@ Can also blacklist specific worlds and toggle all black/whitelisting systems
 # Customization
 Can have different Notification Sounds for invites and Invite Requests.
 Just name the files either Invite.ogg or InviteRequest.ogg depending on what you want to override.
+For just default all in one just change the Default.ogg File
 
 It'll also create a Localization.json file where you can customize the text for each popup
 
