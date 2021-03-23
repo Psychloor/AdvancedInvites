@@ -113,6 +113,7 @@
     <Compile Include="BuildInfo.cs" />
     <Compile Include="AdvancedInviteSystem.cs" />
     <Compile Include="InviteHandler.cs" />
+    <Compile Include="Localization.cs" />
     <Compile Include="SoundPlayer.cs" />
     <Compile Include="UserPermissionHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

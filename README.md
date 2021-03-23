@@ -15,4 +15,10 @@ All whitelisted people automatically get their invite requests accepted unless t
 
 Can also blacklist specific worlds and toggle all black/whitelisting systems
 
+# Customization
+Can have different Notification Sounds for invites and Invite Requests.
+Just name the files either Invite.ogg or InviteRequest.ogg depending on what you want to override.
+
+It'll also create a Localization.json file where you can customize the text for each popup
+
 ![Popup once you accept an invite](https://i.imgur.com/2J0TMxi.png)

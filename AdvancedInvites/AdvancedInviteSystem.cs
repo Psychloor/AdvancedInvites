@@ -19,6 +19,7 @@ namespace AdvancedInvites
     using UnhollowerRuntimeLib.XrefScans;
 
     using VRC.Core;
+    
 #if DEBUG
     using UnityEngine;
 #endif
@@ -34,6 +35,8 @@ namespace AdvancedInvites
         private static bool joinMeNotifyRequest = true;
 
         private static bool ignoreBusyStatus;
+
+        private static bool inviteSoundEnabled, inviteRequestSoundEnabled, voteToKickSoundEnabled, friendRequestSoundEnabled;
 
         private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
         
@@ -78,7 +81,14 @@ namespace AdvancedInvites
             advInvPreferencesCategory.CreateEntry("NotificationVolume", .8f, "Notification Volume");
             advInvPreferencesCategory.CreateEntry("JoinMeNotifyRequest", joinMeNotifyRequest, "Join Me Req Notification Sound");
             advInvPreferencesCategory.CreateEntry("IgnoreBusyStatus", ignoreBusyStatus, "Ignore Busy Status");
+            
+            advInvPreferencesCategory.CreateEntry("InviteSoundEnabled", true, "Invite Sound");
+            advInvPreferencesCategory.CreateEntry("InviteRequestSoundEnabled", true, "Invite-Request Sound");
+            advInvPreferencesCategory.CreateEntry("VoteToKickSoundEnabled", false, "Vote-Kick Sound", true);
+            advInvPreferencesCategory.CreateEntry("FriendRequestSoundEnabled", false, "Friend-Request Sound", true);
             OnPreferencesLoaded();
+            
+            Localization.Load();
             
             #if DEBUG
                 try
@@ -161,6 +171,11 @@ namespace AdvancedInvites
             ignoreBusyStatus = advInvPreferencesCategory.GetEntry<bool>("IgnoreBusyStatus").Value;
             SoundPlayer.Volume = advInvPreferencesCategory.GetEntry<float>("NotificationVolume").Value;
 
+            inviteSoundEnabled = advInvPreferencesCategory.GetEntry<bool>("InviteSoundEnabled").Value;
+            inviteRequestSoundEnabled = advInvPreferencesCategory.GetEntry<bool>("InviteRequestSoundEnabled").Value;
+            voteToKickSoundEnabled = advInvPreferencesCategory.GetEntry<bool>("VoteToKickSoundEnabled").Value;
+            friendRequestSoundEnabled = advInvPreferencesCategory.GetEntry<bool>("FriendRequestSoundEnabled").Value;
+
             // Since floats are weird with this new configuration update it seems to skip the "0." and just earrape you instead
             // also limits it to within 0-1 range
             if (SoundPlayer.Volume <= 1.0f) return;
@@ -184,7 +199,7 @@ namespace AdvancedInvites
         private static void AddNotificationPatch(Notification __0)
         {
             if (__0 == null) return;
-            
+
             // Original code doesn't handle much outside worlds so
             if (Utilities.CurrentRoom() == null
                 || Utilities.CurrentWorldInstance() == null) return;
@@ -194,7 +209,7 @@ namespace AdvancedInvites
                 case "invite":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
-                    
+
                 #if DEBUG
                     if (__0.details?.keys != null)
                         foreach (var key in __0.details?.keys)
@@ -214,7 +229,8 @@ namespace AdvancedInvites
                         return;
                     }
 
-                    SoundPlayer.PlayNotificationSound();
+                    if (inviteSoundEnabled)
+                        SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.Invite);
                     break;
 
                 case "requestinvite":
@@ -235,7 +251,8 @@ namespace AdvancedInvites
 
                         if (!Utilities.AllowedToInvite())
                         {
-                            SoundPlayer.PlayNotificationSound();
+                            if (inviteRequestSoundEnabled)
+                                SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.InviteRequest);
                             return;
                         }
 
@@ -247,7 +264,8 @@ namespace AdvancedInvites
                                 // Bool's doesn't work and closes the game. just let it through
                                 //Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
                                 //Utilities.DeleteNotification(__0);
-                                SoundPlayer.PlayNotificationSound();
+                                if (inviteRequestSoundEnabled)
+                                    SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.InviteRequest);
                             }
 
                             return;
@@ -261,7 +279,8 @@ namespace AdvancedInvites
                         }
 
                         if (APIUser.CurrentUser.statusIsSetToJoinMe && joinMeNotifyRequest)
-                            SoundPlayer.PlayNotificationSound();
+                            if (inviteRequestSoundEnabled)
+                                SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.InviteRequest);
                     }
                     else
                     {
@@ -269,11 +288,27 @@ namespace AdvancedInvites
                             if (APIUser.CurrentUser.statusIsSetToJoinMe
                                 && !joinMeNotifyRequest)
                                 return;
-
-                        SoundPlayer.PlayNotificationSound();
+                        if (inviteRequestSoundEnabled)
+                            SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.InviteRequest);
                     }
 
                     return;
+
+                case "votetokick":
+                    if (HandledNotifications.Contains(__0.id)) return;
+                    HandledNotifications.Add(__0.id);
+                    
+                    if (voteToKickSoundEnabled)
+                        SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.VoteToKick);
+                    break;
+
+                case "friendrequest":
+                    if (HandledNotifications.Contains(__0.id)) return;
+                    HandledNotifications.Add(__0.id);
+                    
+                    if (friendRequestSoundEnabled)
+                        SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.FriendRequest);
+                    break;
 
                 default:
                     return;

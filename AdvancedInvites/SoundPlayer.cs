@@ -1,15 +1,13 @@
-
-
 namespace AdvancedInvites
 {
 
     using System;
     using System.Collections;
+    using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
 
-    using Il2CppSystem.Collections.Generic;
-    
     using MelonLoader;
 
     using UnityEngine;
@@ -17,44 +15,75 @@ namespace AdvancedInvites
     public class SoundPlayer
     {
 
-        private const string AudioPath = "UserData/AdvancedInvites/Notification.ogg";
+        public enum NotificationType
+        {
+
+            Default,
+
+            Invite,
+
+            InviteRequest,
+
+            FriendRequest,
+
+            VoteToKick
+
+        }
+
+        private const string AudioResourceFolder = "UserData/AdvancedInvites/";
 
         private static SoundPlayer instance;
 
         public static float Volume;
 
+        private Dictionary<NotificationType, AudioClip> audioClipDictionary;
+
         private GameObject audioGameObject;
 
         private AudioSource audioSource;
 
-        private AudioClip notificationSound;
-
         private SoundPlayer()
         { }
 
-        public static void PlayNotificationSound()
+        private static string GetAudioPath(NotificationType notificationType)
         {
-            if (instance != null
-                && instance.audioSource != null
-                && instance.notificationSound != null
-                && instance.notificationSound.loadState == AudioDataLoadState.Loaded)
-            {
-                instance.audioSource.outputAudioMixerGroup = null;
-                instance.audioSource.PlayOneShot(instance.notificationSound, Volume);
-            }
+            return Path.GetFullPath(Path.Combine(AudioResourceFolder, $"{notificationType}.ogg"));
         }
 
-        private static IEnumerator LoadNotificationSound()
+        public static void PlayNotificationSound(NotificationType notificationType)
         {
-            MelonLogger.Msg("Loading Notification Sound");
+            if (instance == null
+                || instance.audioSource == null) return;
 
-            if (!File.Exists(AudioPath))
+            instance.audioSource.outputAudioMixerGroup = null;
+
+            if (notificationType != NotificationType.Default && instance.audioClipDictionary.ContainsKey(notificationType)
+                && instance.audioClipDictionary[notificationType].loadState == AudioDataLoadState.Loaded)
+                instance.audioSource.PlayOneShot(instance.audioClipDictionary[notificationType], Volume);
+            else if (instance.audioClipDictionary.ContainsKey(NotificationType.Default)
+                     && instance.audioClipDictionary[NotificationType.Default].loadState == AudioDataLoadState.Loaded)
+                instance.audioSource.PlayOneShot(instance.audioClipDictionary[NotificationType.Default], Volume);
+        }
+
+        private static IEnumerator LoadNotificationSounds()
+        {
+            MelonLogger.Msg("Loading Notification Sound(s)");
+            instance.audioClipDictionary = new Dictionary<NotificationType, AudioClip>();
+
+            // Legacy Convert
+            if (File.Exists(Path.GetFullPath(Path.Combine(AudioResourceFolder, "Notification.ogg"))))
             {
-                MelonLogger.Msg("Notification Sound Not Found. Creating default one");
+                MelonLogger.Msg("Found old notification file. renaming to Default.ogg");
+                File.Move(Path.GetFullPath(Path.Combine(AudioResourceFolder, "Notification.ogg")), GetAudioPath(NotificationType.Default));
+            }
+
+            if (!File.Exists(GetAudioPath(NotificationType.Default)))
+            {
+                MelonLogger.Msg("Default Notification sound not found. Creating default one");
                 try
                 {
                     using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AdvancedInvites.Notification.ogg");
-                    using FileStream fs = new FileStream(AudioPath, FileMode.Create);
+                    using FileStream fs = new FileStream(GetAudioPath(NotificationType.Default), FileMode.Create);
 
                     // ReSharper disable once PossibleNullReferenceException
                     stream.CopyTo(fs);
@@ -63,23 +92,34 @@ namespace AdvancedInvites
                 }
                 catch (Exception e)
                 {
-                    MelonLogger.Error("Something went wrong writing the file to UserData/AdvancedInvites/\n" + e);
+                    MelonLogger.Error("Something went wrong writing the default notification file to UserData/AdvancedInvites Folder:\n" + e);
                     yield break;
                 }
             }
 
-            WWW request = new WWW(Path.GetFullPath(AudioPath), null, new Dictionary<string, string>());
-            instance.notificationSound = request.GetAudioClip(false, false, AudioType.OGGVORBIS);
-            instance.notificationSound.hideFlags = HideFlags.HideAndDontSave;
+            foreach (string name in Enum.GetNames(typeof(NotificationType))
+                                        .Where(name => File.Exists(GetAudioPath((NotificationType)Enum.Parse(typeof(NotificationType), name)))))
+                yield return LoadAudioClip((NotificationType)Enum.Parse(typeof(NotificationType), name));
+        }
 
-            while (!request.isDone || instance.notificationSound.loadState == AudioDataLoadState.Loading) yield return new WaitForEndOfFrame();
+        private static IEnumerator LoadAudioClip(NotificationType notificationType)
+        {
+            WWW request = new WWW(GetAudioPath(notificationType), null, new Il2CppSystem.Collections.Generic.Dictionary<string, string>());
+            AudioClip audioClip = request.GetAudioClip(false, false, AudioType.OGGVORBIS);
 
+            while (!request.isDone || audioClip.loadState == AudioDataLoadState.Loading) yield return new WaitForEndOfFrame();
             request.Dispose();
 
-            if (instance.notificationSound.loadState == AudioDataLoadState.Loaded)
-                MelonLogger.Msg("Notification Sound Loaded");
-            else if (instance.notificationSound.loadState == AudioDataLoadState.Failed)
-                MelonLogger.Error("Failed To Load Notification Sound");
+            if (audioClip.loadState == AudioDataLoadState.Loaded)
+            {
+                instance.audioClipDictionary.Add(notificationType, audioClip);
+                instance.audioClipDictionary[notificationType].hideFlags = HideFlags.HideAndDontSave;
+                MelonLogger.Msg($"{notificationType} Notification Sound Loaded");
+            }
+            else if (audioClip.loadState == AudioDataLoadState.Failed)
+            {
+                MelonLogger.Error($"Failed To Load {notificationType} Notification Sound");
+            }
         }
 
         public static void Initialize()
@@ -94,7 +134,7 @@ namespace AdvancedInvites
             instance.audioSource.spatialBlend = 0f;
             instance.audioSource.spatialize = false;
 
-            MelonCoroutines.Start(LoadNotificationSound());
+            MelonCoroutines.Start(LoadNotificationSounds());
         }
 
     }

@@ -27,7 +27,8 @@ namespace AdvancedInvites
         // 1.5.4 DoNotDisturb/Busy played sound for invites
         // 1.6.0 Updated to Build 1063
         // 1.6.1 Popupwindow Single to First
-        public const string Version = "1.6.1";
+        // 1.6.2 Some Customization
+        public const string Version = "1.6.2";
 
     }
 

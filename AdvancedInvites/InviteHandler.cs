@@ -31,20 +31,20 @@ namespace AdvancedInvites
                 case ApiWorldInstance.AccessType.FriendsOfGuests:
                 case ApiWorldInstance.AccessType.InvitePlus:
                     Utilities.ShowPopupWindow(
-                        "Invitation from " + notification.senderUsername,
-                        $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {Utilities.GetAccessName(accessType)}\n\nWanna go by yourself or drop a portal for the lads?",
-                        "Go Yourself",
+                        Localization.GetTitle(notification.senderUsername),
+                        Localization.GetPublicPopup(notification.details["worldName"].ToString(), Utilities.GetAccessName(accessType)),
+                        Localization.GetJoinButton(),
                         JoinYourself,
-                        "Drop Portal",
+                        Localization.GetDropPortalButton(),
                         DropPortal);
                     break;
 
                 case ApiWorldInstance.AccessType.FriendsOnly:
                 case ApiWorldInstance.AccessType.InviteOnly:
                     Utilities.ShowPopupWindow(
-                        "Invitation from " + notification.senderUsername,
-                        $"You have officially been invited to: \n{notification.details["worldName"].ToString()}\nInstance Type: {Utilities.GetAccessName(accessType)}\n\nPrivate Instance so can't drop a portal",
-                        "Join",
+                        Localization.GetTitle(notification.senderUsername),
+                        Localization.GetPrivatePopup(notification.details["worldName"].ToString(), Utilities.GetAccessName(accessType)),
+                        Localization.GetJoinButton(),
                         JoinYourself);
                     break;
 
