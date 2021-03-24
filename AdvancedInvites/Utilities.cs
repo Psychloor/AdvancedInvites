@@ -41,8 +41,31 @@ namespace AdvancedInvites
 
         private static SendNotificationDelegate ourSendNotificationDelegate;
 
-        public static bool StreamerMode => false;
+        public delegate bool StreamerModeDelegate();
 
+        private static StreamerModeDelegate ourStreamerModeDelegate;
+
+        public static StreamerModeDelegate GetStreamerMode
+        {
+            get
+            {
+                if (ourStreamerModeDelegate != null) return ourStreamerModeDelegate;
+
+                foreach (PropertyInfo property in typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static))
+                {
+                    if (property.PropertyType != typeof(bool)) continue;
+                    if (XrefScanner.XrefScan(property.GetSetMethod()).Any(
+                        xref => xref.Type == XrefType.Global && xref.ReadAsObject()?.ToString().Equals("VRC_STREAMER_MODE_ENABLED") == true))
+                    {
+                        ourStreamerModeDelegate = (StreamerModeDelegate)Delegate.CreateDelegate(typeof(StreamerModeDelegate), property.GetGetMethod());
+                        return ourStreamerModeDelegate;
+                    }
+                }
+
+                return null;
+            }
+        }
+        
         private static SendNotificationDelegate SendNotification
         {
             get
@@ -113,13 +136,16 @@ namespace AdvancedInvites
                 // Appears to be NotificationManager.Method_Public_Void_Notification_1(notification); 
                 MethodInfo deleteMethod = typeof(NotificationManager)
                     .GetMethods(BindingFlags.Public | BindingFlags.Instance).First(m => 
-                        m.XRefScanFor("voteToKick") && //idk but this messes it up somehow and it works without it to soo uhhh *yeet*
+                        m.Name.StartsWith("Method_Public_Void_") &&
                         m.GetParameters().Length == 1 &&
                         m.GetParameters()[0].ParameterType == typeof(Notification) &&
-                        m.Name.StartsWith("Method_Public_Void_") &&
+                        m.XRefScanFor("voteToKick") && //idk but this messes it up somehow and it works without it to soo uhhh *yeet*
                         m.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) == 2 &&
-                        m.XRefScanMethodCount(null, nameof(NotificationManager)) >= 5
+                        m.XRefScanMethodCount(null, nameof(NotificationManager)) >= 3 && // 5 and the rest don't need to be used
+                        XrefScanner.UsedBy(m).Any(instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(NotificationManager)) &&
+                        XrefScanner.UsedBy(m).Any(instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(QuickMenu))
                     );
+
                 ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
                     typeof(DeleteNotificationDelegate),
                     NotificationManager.field_Private_Static_NotificationManager_0,

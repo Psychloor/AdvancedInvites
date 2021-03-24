@@ -29,7 +29,8 @@ namespace AdvancedInvites
         // 1.6.1 Popupwindow Single to First
         // 1.6.2 Some Customization
         // 1.6.2.1 Build 1067 Deletion
-        public const string Version = "1.6.2.1";
+        // 1.6.2.2 Streamer Mode Added
+        public const string Version = "1.6.2.2";
 
     }
 

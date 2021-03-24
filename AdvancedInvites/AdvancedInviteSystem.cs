@@ -16,8 +16,6 @@ namespace AdvancedInvites
 
     using Transmtn.DTO.Notifications;
 
-    using UnhollowerRuntimeLib.XrefScans;
-
     using VRC.Core;
     
 #if DEBUG
@@ -200,7 +198,7 @@ namespace AdvancedInvites
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
         private static void AddNotificationPatch(Notification __0)
         {
-            if (Utilities.StreamerMode) return;
+            if (Utilities.GetStreamerMode()) return;
             if (__0 == null) return;
 
             // Original code doesn't handle much outside worlds so
@@ -323,7 +321,7 @@ namespace AdvancedInvites
             try
             {
                 if (thisPtr == IntPtr.Zero || notificationPtr == IntPtr.Zero) return;
-                if (Utilities.StreamerMode)
+                if (Utilities.GetStreamerMode())
                 {
                     acceptNotificationDelegate(thisPtr, notificationPtr);
                     return;
