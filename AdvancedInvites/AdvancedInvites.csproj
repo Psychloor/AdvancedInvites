@@ -112,6 +112,7 @@
   <ItemGroup>
     <Compile Include="BuildInfo.cs" />
     <Compile Include="AdvancedInviteSystem.cs" />
+    <Compile Include="DebugTesting.cs" />
     <Compile Include="InviteHandler.cs" />
     <Compile Include="Localization.cs" />
     <Compile Include="SoundPlayer.cs" />

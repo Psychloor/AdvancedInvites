@@ -28,7 +28,8 @@ namespace AdvancedInvites
         // 1.6.0 Updated to Build 1063
         // 1.6.1 Popupwindow Single to First
         // 1.6.2 Some Customization
-        public const string Version = "1.6.2";
+        // 1.6.2.1 Build 1067 Deletion
+        public const string Version = "1.6.2.1";
 
     }
 

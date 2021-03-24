@@ -91,6 +91,8 @@ namespace AdvancedInvites
             Localization.Load();
             
             #if DEBUG
+                DebugTesting.Test();
+                
                 try
                 {
                     MethodInfo sendNotificationMethod = typeof(NotificationManager).GetMethod(
@@ -198,6 +200,7 @@ namespace AdvancedInvites
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
         private static void AddNotificationPatch(Notification __0)
         {
+            if (Utilities.StreamerMode) return;
             if (__0 == null) return;
 
             // Original code doesn't handle much outside worlds so
@@ -320,6 +323,11 @@ namespace AdvancedInvites
             try
             {
                 if (thisPtr == IntPtr.Zero || notificationPtr == IntPtr.Zero) return;
+                if (Utilities.StreamerMode)
+                {
+                    acceptNotificationDelegate(thisPtr, notificationPtr);
+                    return;
+                }
                 
                 var notification = new Notification(notificationPtr);
                 if (notification.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase))
