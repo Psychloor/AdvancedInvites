@@ -57,7 +57,8 @@ namespace AdvancedInvites
 
             instance.audioSource.outputAudioMixerGroup = null;
 
-            if (notificationType != NotificationType.Default && instance.audioClipDictionary.ContainsKey(notificationType)
+            if (notificationType != NotificationType.Default
+                && instance.audioClipDictionary.ContainsKey(notificationType)
                 && instance.audioClipDictionary[notificationType].loadState == AudioDataLoadState.Loaded)
                 instance.audioSource.PlayOneShot(instance.audioClipDictionary[notificationType], Volume);
             else if (instance.audioClipDictionary.ContainsKey(NotificationType.Default)
@@ -83,12 +84,17 @@ namespace AdvancedInvites
                 try
                 {
                     using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AdvancedInvites.Notification.ogg");
-                    using FileStream fs = new FileStream(GetAudioPath(NotificationType.Default), FileMode.Create);
-
-                    // ReSharper disable once PossibleNullReferenceException
-                    stream.CopyTo(fs);
-                    fs.Close();
-                    stream.Close();
+                    if (stream != null)
+                    {
+                        using FileStream fs = new FileStream(GetAudioPath(NotificationType.Default), FileMode.Create);
+                        stream.CopyTo(fs);
+                        fs.Close();
+                        stream.Close();
+                    }
+                    else
+                    {
+                        MelonLogger.Error("Failed to open Resource Stream for Notification.ogg");
+                    }
                 }
                 catch (Exception e)
                 {

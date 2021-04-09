@@ -30,6 +30,8 @@ namespace AdvancedInvites
         // 1.6.2 Some Customization
         // 1.6.2.1 Build 1067 Deletion
         // 1.6.2.2 Streamer Mode Added
+        // 1.6.2.3 Custom VRChat OnUiManager Initialized for the future. Regex for localization and separate world id and instance with tags in invitehandler.
+        // Pretty much more future proofing
         public const string Version = "1.6.2.3";
 
     }

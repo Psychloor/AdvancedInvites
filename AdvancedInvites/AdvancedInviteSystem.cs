@@ -1,28 +1,29 @@
-﻿
-
-namespace AdvancedInvites
+﻿namespace AdvancedInvites
 {
 
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.InteropServices;
 
     using Harmony;
-    using System.Runtime.InteropServices;
-    using UnhollowerBaseLib;
 
     using MelonLoader;
 
     using Transmtn.DTO.Notifications;
 
+    using UnhollowerBaseLib;
+
+    using UnityEngine;
+
     using VRC.Core;
-    
+
 #if DEBUG
     using UnityEngine;
 #endif
-    
-    
+
     public sealed class AdvancedInviteSystem : MelonMod
     {
 
@@ -37,9 +38,9 @@ namespace AdvancedInvites
         private static bool inviteSoundEnabled, inviteRequestSoundEnabled, voteToKickSoundEnabled, friendRequestSoundEnabled;
 
         private static readonly HashSet<string> HandledNotifications = new HashSet<string>();
-        
+
         private static MelonPreferences_Category advInvPreferencesCategory;
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void AcceptNotificationDelegate(IntPtr thisPtr, IntPtr notification);
 
@@ -67,28 +68,33 @@ namespace AdvancedInvites
 
             return true;
         }
+
+        private static void SetStreamerModePostfix(bool __0)
+        {
+            MelonLogger.Msg("Streamer Mode Set To " + __0);
+        }
     #endif
 
         public override void OnApplicationStart()
         {
             advInvPreferencesCategory = MelonPreferences.CreateCategory("AdvancedInvites", "Advanced Invites");
-            
+
             advInvPreferencesCategory.CreateEntry("DeleteNotifications", InviteHandler.DeleteNotifications, "Delete Notification After Successful Use");
             advInvPreferencesCategory.CreateEntry("BlacklistEnabled", blacklistEnabled, "Blacklist System");
             advInvPreferencesCategory.CreateEntry("WhitelistEnabled", whitelistEnabled, "Whitelist System");
             advInvPreferencesCategory.CreateEntry("NotificationVolume", .8f, "Notification Volume");
             advInvPreferencesCategory.CreateEntry("JoinMeNotifyRequest", joinMeNotifyRequest, "Join Me Req Notification Sound");
             advInvPreferencesCategory.CreateEntry("IgnoreBusyStatus", ignoreBusyStatus, "Ignore Busy Status");
-            
+
             advInvPreferencesCategory.CreateEntry("InviteSoundEnabled", true, "Invite Sound");
             advInvPreferencesCategory.CreateEntry("InviteRequestSoundEnabled", true, "Invite-Request Sound");
             advInvPreferencesCategory.CreateEntry("VoteToKickSoundEnabled", false, "Vote-Kick Sound", true);
             advInvPreferencesCategory.CreateEntry("FriendRequestSoundEnabled", false, "Friend-Request Sound", true);
             OnPreferencesLoaded();
-            
+
             Localization.Load();
-            
-            #if DEBUG
+
+        #if DEBUG
                 DebugTesting.Test();
                 
                 try
@@ -103,26 +109,23 @@ namespace AdvancedInvites
                 {
                     MelonLogger.Error("Error Patching SendNotification: " + e.Message);
                 }
-            #endif
-            
+        #endif
+
             try
             {
                 unsafe
                 {
                     // Appears to be NotificationManager.Method_Private_Void_Notification_1
-                    var acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                        m => 
-                            m.GetParameters().Length == 1 && 
-                            m.GetParameters()[0].ParameterType == typeof(Notification) && 
-                            m.XRefScanFor("AcceptNotification for notification:")
-                    );
-                    var originalMethod = *(IntPtr*) (IntPtr) UnhollowerUtils
-                        .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(acceptNotificationMethod)
-                        .GetValue(null);
-                    
-                    MelonUtils.NativeHookAttach((IntPtr) (&originalMethod),
-                        typeof(AdvancedInviteSystem).GetMethod(nameof(AcceptNotificationPatch),
-                            BindingFlags.Static | BindingFlags.NonPublic)!.MethodHandle.GetFunctionPointer());
+                    MethodInfo acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                        m => m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(Notification)
+                                                           && m.XRefScanFor("AcceptNotification for notification:"));
+                    IntPtr originalMethod = *(IntPtr*)(IntPtr)UnhollowerUtils
+                                                              .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(acceptNotificationMethod).GetValue(null);
+
+                    MelonUtils.NativeHookAttach(
+                        (IntPtr)(&originalMethod),
+                        typeof(AdvancedInviteSystem).GetMethod(nameof(AcceptNotificationPatch), BindingFlags.Static | BindingFlags.NonPublic)!.MethodHandle
+                                                    .GetFunctionPointer());
                     acceptNotificationDelegate = Marshal.GetDelegateForFunctionPointer<AcceptNotificationDelegate>(originalMethod);
                 }
             }
@@ -134,14 +137,9 @@ namespace AdvancedInvites
             try
             {
                 //Appears to be NotificationManager.Method_Private_String_Notification_1
-                var addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                    m => 
-                        m.Name.StartsWith("Method_Private_") &&
-                        m.ReturnType == typeof(String) &&
-                        m.GetParameters().Length == 1 && 
-                        m.GetParameters()[0].ParameterType == typeof(Notification) && 
-                        m.XRefScanFor("imageUrl")
-                );
+                MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                    m => m.Name.StartsWith("Method_Private_") && m.ReturnType == typeof(string) && m.GetParameters().Length == 1
+                         && m.GetParameters()[0].ParameterType == typeof(Notification) && m.XRefScanFor("imageUrl"));
                 Harmony.Patch(
                     addNotificationMethod,
                     postfix: new HarmonyMethod(
@@ -154,9 +152,23 @@ namespace AdvancedInvites
 
             UserPermissionHandler.LoadSettings();
             WorldPermissionHandler.LoadSettings();
+            MelonCoroutines.Start(WaitForVrChatUiManager());
         }
 
-        public override void VRChat_OnUiManagerInit()
+        private static IEnumerator WaitForVrChatUiManager()
+        {
+            WaitForSeconds checkRate = new WaitForSeconds(2f);
+            do
+            {
+                yield return checkRate;
+                checkRate.m_Seconds = 2f;
+            }
+            while (Utilities.GetVRCUiManager() == null);
+
+            UiManagerInit();
+        }
+
+        private static void UiManagerInit()
         {
             UiButtons.Initialize();
             SoundPlayer.Initialize();
@@ -181,7 +193,8 @@ namespace AdvancedInvites
             if (SoundPlayer.Volume <= 1.0f) return;
 
             // .45 would turn into 45 (once updated to melonloader 0.3+) which would turn into 4.5 and then back to .45 again
-            while (advInvPreferencesCategory.GetEntry<float>("NotificationVolume").Value > 1.0f) advInvPreferencesCategory.GetEntry<float>("NotificationVolume").Value *= .1f;
+            while (advInvPreferencesCategory.GetEntry<float>("NotificationVolume").Value > 1.0f)
+                advInvPreferencesCategory.GetEntry<float>("NotificationVolume").Value *= .1f;
             advInvPreferencesCategory.GetEntry<float>("NotificationVolume").Save();
         }
 
@@ -249,7 +262,6 @@ namespace AdvancedInvites
 
                     if (whitelistEnabled && UserPermissionHandler.IsWhitelisted(__0.senderUserId))
                     {
-
                         if (!Utilities.AllowedToInvite())
                         {
                             if (inviteRequestSoundEnabled)
@@ -261,13 +273,12 @@ namespace AdvancedInvites
                             && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
                         {
                             if (!APIUser.CurrentUser.statusIsSetToJoinMe)
-                            {
+
                                 // Bool's doesn't work and closes the game. just let it through
                                 //Utilities.SendIncompatiblePlatformNotification(__0.senderUserId);
                                 //Utilities.DeleteNotification(__0);
                                 if (inviteRequestSoundEnabled)
                                     SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.InviteRequest);
-                            }
 
                             return;
                         }
@@ -298,7 +309,7 @@ namespace AdvancedInvites
                 case "votetokick":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
-                    
+
                     if (voteToKickSoundEnabled)
                         SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.VoteToKick);
                     break;
@@ -306,7 +317,7 @@ namespace AdvancedInvites
                 case "friendrequest":
                     if (HandledNotifications.Contains(__0.id)) return;
                     HandledNotifications.Add(__0.id);
-                    
+
                     if (friendRequestSoundEnabled)
                         SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.FriendRequest);
                     break;
@@ -320,25 +331,29 @@ namespace AdvancedInvites
         {
             try
             {
-                if (thisPtr == IntPtr.Zero || notificationPtr == IntPtr.Zero) return;
+                if (thisPtr == IntPtr.Zero
+                    || notificationPtr == IntPtr.Zero) return;
                 if (Utilities.GetStreamerMode())
                 {
                     acceptNotificationDelegate(thisPtr, notificationPtr);
                     return;
                 }
-                
-                var notification = new Notification(notificationPtr);
+
+                Notification notification = new Notification(notificationPtr);
                 if (notification.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase))
                 {
                     InviteHandler.HandleInvite(notification);
                     return;
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 MelonLogger.Error($"Exception in accept notification patch: {e}");
             }
+
             acceptNotificationDelegate(thisPtr, notificationPtr);
         }
+
     }
+
 }

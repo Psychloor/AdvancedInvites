@@ -3,6 +3,8 @@ namespace AdvancedInvites
 
     using System;
 
+    using MelonLoader;
+
     using Transmtn.DTO.Notifications;
 
     using UnityEngine;
@@ -17,18 +19,24 @@ namespace AdvancedInvites
 
         private static Notification currentNotification;
 
-        private static string worldInstance;
+        // for the current notification being handled
+        private static string worldId;
+        private static string instanceIdWithTags;
 
         public static void HandleInvite(Notification notification)
         {
             currentNotification = notification;
-            worldInstance = notification.details["worldId"].ToString();
-
-            ApiWorldInstance.AccessType accessType = Utilities.GetAccessType(worldInstance.Split(':')[1]);
-
-            string worldName = notification.details["worldName"].ToString();
-            string instanceType = Utilities.GetAccessName(accessType);
+            worldId = notification.details["worldId"].ToString().Split(':')[0];
             
+            // Whenever vrchat moves away from keeping both same and actually do keep instance as instance only
+            string[] instanceIdDetails = notification.details["instanceId"].ToString().Split(':');
+            instanceIdWithTags = instanceIdDetails.Length > 0 ? instanceIdDetails[1] : instanceIdDetails[0];
+
+            ApiWorldInstance.AccessType accessType = Utilities.GetAccessType(instanceIdWithTags);
+
+            var worldName = notification.details["worldName"].ToString();
+            string instanceType = Utilities.GetAccessName(accessType);
+
             switch (accessType)
             {
                 case ApiWorldInstance.AccessType.Public:
@@ -60,13 +68,10 @@ namespace AdvancedInvites
 
         private static void DropPortal()
         {
-            string worldId = worldInstance.Split(':')[0];
-            string instanceIdWithTags = worldInstance.Split(':')[1];
             const int PlayerCount = 0;
             const bool ShowAlerts = true;
 
-            // not gonna share the custom portal creation so apifetching and making worldinstance it is
-            // also needed as createportal will check for tags in the apiworld too
+            // Fetch the world to know it exists and also needed for the world tags during the portal creation stage
             API.Fetch<ApiWorld>(
                 worldId,
 
@@ -82,7 +87,15 @@ namespace AdvancedInvites
 
                             // CreatePortal (before il2cpp)
                             bool created = Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward, ShowAlerts);
-                            if (created && DeleteNotifications) Utilities.DeleteNotification(currentNotification);
+                            if (created && DeleteNotifications)
+                                try
+                                {
+                                    Utilities.DeleteNotification(currentNotification);
+                                }
+                                catch (Exception e)
+                                {
+                                    MelonLogger.Error("Couldn't delete the notification:\n"+e);
+                                }
                         }),
 
                 // On Failure
@@ -92,8 +105,18 @@ namespace AdvancedInvites
         private static void JoinYourself()
         {
             Utilities.HideCurrentPopup();
-            if (DeleteNotifications) Utilities.DeleteNotification(currentNotification);
-            Networking.GoToRoom(worldInstance);
+
+            if (DeleteNotifications)
+                try
+                {
+                    Utilities.DeleteNotification(currentNotification);
+                }
+                catch (Exception e)
+                {
+                    MelonLogger.Error("Couldn't delete the notification:\n"+e);
+                }
+            
+            Networking.GoToRoom($"{worldId}:{instanceIdWithTags}");
         }
 
     }

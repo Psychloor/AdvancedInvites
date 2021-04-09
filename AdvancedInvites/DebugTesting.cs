@@ -44,14 +44,14 @@ namespace AdvancedInvites
                 }
             }*/
             
-            MelonLogger.Msg("Finding Streamermode");
+            /*MelonLogger.Msg("Finding Streamermode");
             foreach (PropertyInfo property in typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static))
             {
                 if (property.PropertyType == typeof(bool))
                 {
                     property.GetSetMethod().XrefDump();
                 }
-            }
+            }*/
             
         }
 

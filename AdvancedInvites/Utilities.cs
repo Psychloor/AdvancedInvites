@@ -1,10 +1,7 @@
-using Il2CppSystem.Collections.Generic;
-
 namespace AdvancedInvites
 {
 
     using System;
-    using System.Collections;
     using System.Linq;
     using System.Reflection;
 
@@ -51,21 +48,15 @@ namespace AdvancedInvites
             {
                 if (ourStreamerModeDelegate != null) return ourStreamerModeDelegate;
 
-                foreach (PropertyInfo property in typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static))
-                {
-                    if (property.PropertyType != typeof(bool)) continue;
-                    if (XrefScanner.XrefScan(property.GetSetMethod()).Any(
-                        xref => xref.Type == XrefType.Global && xref.ReadAsObject()?.ToString().Equals("VRC_STREAMER_MODE_ENABLED") == true))
-                    {
-                        ourStreamerModeDelegate = (StreamerModeDelegate)Delegate.CreateDelegate(typeof(StreamerModeDelegate), property.GetGetMethod());
-                        return ourStreamerModeDelegate;
-                    }
-                }
+                PropertyInfo streamerModeProperty = typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static).First(
+                    property => property.PropertyType == typeof(bool) && XrefScanner.XrefScan(property.GetSetMethod()).Any(
+                                    xref => xref.Type == XrefType.Global && xref.ReadAsObject()?.ToString().Equals("VRC_STREAMER_MODE_ENABLED") == true));
 
-                return null;
+                ourStreamerModeDelegate = (StreamerModeDelegate)Delegate.CreateDelegate(typeof(StreamerModeDelegate), streamerModeProperty.GetGetMethod());
+                return ourStreamerModeDelegate;
             }
         }
-        
+
         private static SendNotificationDelegate SendNotification
         {
             get
@@ -100,7 +91,7 @@ namespace AdvancedInvites
             }
         }
 
-        private static VRCUiManagerDelegate GetVRCUiManager
+        public static VRCUiManagerDelegate GetVRCUiManager
         {
             get
             {
@@ -133,24 +124,39 @@ namespace AdvancedInvites
             get
             {
                 if (ourDeleteNotificationDelegate != null) return ourDeleteNotificationDelegate;
-                // Appears to be NotificationManager.Method_Public_Void_Notification_1(notification); 
-                MethodInfo deleteMethod = typeof(NotificationManager)
-                    .GetMethods(BindingFlags.Public | BindingFlags.Instance).First(m => 
-                        m.Name.StartsWith("Method_Public_Void_") &&
-                        m.GetParameters().Length == 1 &&
-                        m.GetParameters()[0].ParameterType == typeof(Notification) &&
-                        m.XRefScanFor("voteToKick") && //idk but this messes it up somehow and it works without it to soo uhhh *yeet*
-                        m.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) == 2 &&
-                        m.XRefScanMethodCount(null, nameof(NotificationManager)) >= 3 && // 5 and the rest don't need to be used
-                        XrefScanner.UsedBy(m).Any(instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(NotificationManager)) &&
-                        XrefScanner.UsedBy(m).Any(instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(QuickMenu))
-                    );
 
-                ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
-                    typeof(DeleteNotificationDelegate),
-                    NotificationManager.field_Private_Static_NotificationManager_0,
-                    deleteMethod);
-                return ourDeleteNotificationDelegate;
+                // Appears to be NotificationManager.Method_Public_Void_Notification_1(notification); 
+                // the formatter really made it bad now so un-linq it is, thanks rider experimental xD
+                foreach (MethodInfo method in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    // First some pre-filtering before x-referencing it
+                    if (!method.Name.StartsWith("Method_Public_Void_")) continue;
+                    if (method.GetParameters().Length != 1) continue;
+                    if (method.GetParameters()[0].ParameterType != typeof(Notification)) continue;
+
+                    // So far it's mostly always had voteToKick in it for special case
+                    if (!method.XRefScanFor("voteToKick")) continue;
+
+                    // Notification Manager count seems to be at least 3 of
+                    if (method.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) != 2
+                        || method.XRefScanMethodCount(null, nameof(NotificationManager)) < 3) continue;
+
+                    // The real one is used by the quick menu and itself 
+                    if (!XrefScanner.UsedBy(method).Any(
+                            instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(NotificationManager))) continue;
+                    if (!XrefScanner.UsedBy(method).Any(
+                            instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(QuickMenu))) continue;
+
+                    // Well seems to be the right one, let's grab it
+                    ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
+                        typeof(DeleteNotificationDelegate),
+                        NotificationManager.field_Private_Static_NotificationManager_0,
+                        method);
+                    return ourDeleteNotificationDelegate;
+                }
+
+                MelonLogger.Warning("Couldn't find the delete notification method. returning null which will give you an error probably :D!");
+                return null;
             }
         }
 
@@ -175,7 +181,8 @@ namespace AdvancedInvites
             {
                 if (ourShowPopupWindowBothDelegate != null) return ourShowPopupWindowBothDelegate;
                 MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                    m => m.Name.IndexOf("pdm", StringComparison.OrdinalIgnoreCase) == -1 && m.GetParameters().Length == 7 && m.XRefScanFor("Popups/StandardPopupV2"));
+                    m => m.Name.IndexOf("pdm", StringComparison.OrdinalIgnoreCase) == -1 && m.GetParameters().Length == 7
+                                                                                         && m.XRefScanFor("Popups/StandardPopupV2"));
 
                 ourShowPopupWindowBothDelegate = (ShowPopupWindowBothDelegate)Delegate.CreateDelegate(
                     typeof(ShowPopupWindowBothDelegate),
@@ -270,9 +277,11 @@ namespace AdvancedInvites
             ApiWorld currentRoom = CurrentRoom();
             NotificationDetails details = new NotificationDetails();
             details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
+
             // don't ask me why, ask vrchat why they added instanceId as
             // a direct copy of worldId with both having both world and instance id
             details.Add("instanceId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
+
             //details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
             details.Add("worldName", currentRoom.name);
 
@@ -286,7 +295,7 @@ namespace AdvancedInvites
             details.Add("incompatible", new Boolean { m_value = true }.BoxIl2CppObject());
             details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject());
 
-            SendNotification(receiverUserName,receiverUserId, "invite", string.Empty, details);
+            SendNotification(receiverUserName, receiverUserId, "invite", string.Empty, details);
         }
 
         public static bool AllowedToInvite()
@@ -438,7 +447,7 @@ namespace AdvancedInvites
             NotificationDetails notificationDetails,
             Il2CppStructArray<byte> picDataIGuess = null);
 
-        private delegate VRCUiManager VRCUiManagerDelegate();
+        public delegate VRCUiManager VRCUiManagerDelegate();
 
         private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts);
 
