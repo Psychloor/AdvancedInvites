@@ -24,6 +24,10 @@ namespace AdvancedInvites
     public static class Utilities
     {
 
+        public delegate bool StreamerModeDelegate();
+
+        public delegate VRCUiManager VRCUiManagerDelegate();
+
         private static CreatePortalDelegate ourCreatePortalDelegate;
 
         private static DeleteNotificationDelegate ourDeleteNotificationDelegate;
@@ -38,8 +42,6 @@ namespace AdvancedInvites
 
         private static SendNotificationDelegate ourSendNotificationDelegate;
 
-        public delegate bool StreamerModeDelegate();
-
         private static StreamerModeDelegate ourStreamerModeDelegate;
 
         public static StreamerModeDelegate GetStreamerMode
@@ -49,7 +51,8 @@ namespace AdvancedInvites
                 if (ourStreamerModeDelegate != null) return ourStreamerModeDelegate;
 
                 PropertyInfo streamerModeProperty = typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static).First(
-                    property => property.PropertyType == typeof(bool) && XrefScanner.XrefScan(property.GetSetMethod()).Any(
+                    property => property.PropertyType == typeof(bool)
+                                && XrefScanner.XrefScan(property.GetSetMethod()).Any(
                                     xref => xref.Type == XrefType.Global && xref.ReadAsObject()?.ToString().Equals("VRC_STREAMER_MODE_ENABLED") == true));
 
                 ourStreamerModeDelegate = (StreamerModeDelegate)Delegate.CreateDelegate(typeof(StreamerModeDelegate), streamerModeProperty.GetGetMethod());
@@ -108,12 +111,9 @@ namespace AdvancedInvites
             {
                 if (ourCreatePortalDelegate != null) return ourCreatePortalDelegate;
                 MethodInfo portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static).First(
-                    m => m.ReturnType == typeof(bool) && m.HasParameters(
-                             typeof(ApiWorld),
-                             typeof(ApiWorldInstance),
-                             typeof(Vector3),
-                             typeof(Vector3),
-                             typeof(bool)) && m.XRefScanFor("admin_dont_allow_portal"));
+                    m => m.ReturnType == typeof(bool)
+                         && m.HasParameters(typeof(ApiWorld), typeof(ApiWorldInstance), typeof(Vector3), typeof(Vector3), typeof(bool))
+                         && m.XRefScanFor("admin_dont_allow_portal"));
                 ourCreatePortalDelegate = (CreatePortalDelegate)Delegate.CreateDelegate(typeof(CreatePortalDelegate), portalMethod);
                 return ourCreatePortalDelegate;
             }
@@ -126,7 +126,6 @@ namespace AdvancedInvites
                 if (ourDeleteNotificationDelegate != null) return ourDeleteNotificationDelegate;
 
                 // Appears to be NotificationManager.Method_Public_Void_Notification_1(notification); 
-                // the formatter really made it bad now so un-linq it is, thanks rider experimental xD
                 foreach (MethodInfo method in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))
                 {
                     // First some pre-filtering before x-referencing it
@@ -145,7 +144,8 @@ namespace AdvancedInvites
                     if (!XrefScanner.UsedBy(method).Any(
                             instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(NotificationManager))) continue;
                     if (!XrefScanner.UsedBy(method).Any(
-                            instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(QuickMenu))) continue;
+                            instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(QuickMenu)))
+                        continue;
 
                     // Well seems to be the right one, let's grab it
                     ourDeleteNotificationDelegate = (DeleteNotificationDelegate)Delegate.CreateDelegate(
@@ -181,8 +181,9 @@ namespace AdvancedInvites
             {
                 if (ourShowPopupWindowBothDelegate != null) return ourShowPopupWindowBothDelegate;
                 MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                    m => m.Name.IndexOf("pdm", StringComparison.OrdinalIgnoreCase) == -1 && m.GetParameters().Length == 7
-                                                                                         && m.XRefScanFor("Popups/StandardPopupV2"));
+                    m => m.Name.IndexOf("pdm", StringComparison.OrdinalIgnoreCase) == -1
+                         && m.GetParameters().Length == 7
+                         && m.XRefScanFor("Popups/StandardPopupV2"));
 
                 ourShowPopupWindowBothDelegate = (ShowPopupWindowBothDelegate)Delegate.CreateDelegate(
                     typeof(ShowPopupWindowBothDelegate),
@@ -257,7 +258,6 @@ namespace AdvancedInvites
                 };
         }
 
-        // might work better? at least cleaner
         public static bool IsPlatformCompatibleWithCurrentWorld(string platform)
         {
             if (CurrentRoom() == null) return false;
@@ -325,11 +325,6 @@ namespace AdvancedInvites
             GetDeleteNotificationDelegate(notification);
         }
 
-        public static Notification GetCurrentActiveNotification()
-        {
-            return QuickMenu.prop_QuickMenu_0.field_Private_Notification_0;
-        }
-
         public static Transform GetLocalPlayerTransform()
         {
             return VRCPlayer.field_Internal_Static_VRCPlayer_0.transform;
@@ -361,7 +356,6 @@ namespace AdvancedInvites
         {
             GetShowPopupWindowSingleDelegate(title, content, button1, action, onCreated);
         }
-
         public static bool XRefScanFor(this MethodBase methodBase, string searchTerm)
         {
             return XrefScanner.XrefScan(methodBase).Any(
@@ -395,14 +389,18 @@ namespace AdvancedInvites
                             if (resolved == null) return false;
 
                             if (!string.IsNullOrEmpty(methodName))
-                                found = !string.IsNullOrEmpty(resolved.Name) && resolved.Name.IndexOf(
-                                            methodName,
-                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
+                            {
+                                found = !string.IsNullOrEmpty(resolved.Name)
+                                        && resolved.Name.IndexOf(methodName, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
+                                if (!found) return false;
+                            }
 
                             if (!string.IsNullOrEmpty(parentType))
-                                found = !string.IsNullOrEmpty(resolved.ReflectedType?.Name) && resolved.ReflectedType.Name.IndexOf(
+                                found = !string.IsNullOrEmpty(resolved.ReflectedType?.Name)
+                                        && resolved.ReflectedType.Name.IndexOf(
                                             parentType,
-                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
+                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)
+                                        >= 0;
 
                             return found;
                         });
@@ -424,14 +422,18 @@ namespace AdvancedInvites
                             if (resolved == null) return false;
 
                             if (!string.IsNullOrEmpty(methodName))
-                                found = !string.IsNullOrEmpty(resolved.Name) && resolved.Name.IndexOf(
-                                            methodName,
-                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
+                            {
+                                found = !string.IsNullOrEmpty(resolved.Name)
+                                        && resolved.Name.IndexOf(methodName, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
+                                if (!found) return false;
+                            }
 
                             if (!string.IsNullOrEmpty(parentType))
-                                found = !string.IsNullOrEmpty(resolved.ReflectedType?.Name) && resolved.ReflectedType.Name.IndexOf(
+                                found = !string.IsNullOrEmpty(resolved.ReflectedType?.Name)
+                                        && resolved.ReflectedType.Name.IndexOf(
                                             parentType,
-                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
+                                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)
+                                        >= 0;
 
                             return found;
                         });
@@ -446,8 +448,6 @@ namespace AdvancedInvites
             string message,
             NotificationDetails notificationDetails,
             Il2CppStructArray<byte> picDataIGuess = null);
-
-        public delegate VRCUiManager VRCUiManagerDelegate();
 
         private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts);
 

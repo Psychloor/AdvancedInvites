@@ -2,14 +2,10 @@
 namespace AdvancedInvites
 {
 
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection;
 
     using MelonLoader;
-
-    using Transmtn.DTO.Notifications;
 
     using UnhollowerRuntimeLib.XrefScans;
 
@@ -43,7 +39,7 @@ namespace AdvancedInvites
                     MelonLogger.Msg(resolved.DeclaringType?.ToString());
                 }
             }*/
-            
+
             /*MelonLogger.Msg("Finding Streamermode");
             foreach (PropertyInfo property in typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static))
             {
@@ -52,49 +48,43 @@ namespace AdvancedInvites
                     property.GetSetMethod().XrefDump();
                 }
             }*/
-            
         }
 
         public static void DumpTypesUsedBy(this MethodBase methodBase)
         {
             if (methodBase == null) return;
-            
-            MelonLogger.Msg("Types used by method: "+methodBase.Name);
-            HashSet<string> usedTypes = new HashSet<string>();
+
+            MelonLogger.Msg("Types used by method: " + methodBase.Name);
+            var usedTypes = new HashSet<string>();
             foreach (XrefInstance instance in XrefScanner.UsedBy(methodBase))
-            {
                 if (instance.Type == XrefType.Method)
                 {
-                    var resolved = instance.TryResolve();
+                    MethodBase resolved = instance.TryResolve();
                     if (resolved == null) continue;
                     if (usedTypes.Contains(resolved.DeclaringType?.ToString())) continue;
                     usedTypes.Add(resolved.DeclaringType?.ToString());
                     MelonLogger.Msg(resolved.DeclaringType?.ToString());
                 }
-            }
         }
-        
+
         internal static void XrefDump(this MethodBase methodBase)
         {
-            MelonLogger.Msg("Scanning Method: "+methodBase.Name);
+            MelonLogger.Msg("Scanning Method: " + methodBase.Name);
             foreach (XrefInstance instance in XrefScanner.XrefScan(methodBase))
-            {
                 switch (instance.Type)
                 {
                     case XrefType.Global:
                         MelonLogger.Msg($"\tGlobal Instance: {instance.ReadAsObject()?.ToString()}");
                         break;
                     case XrefType.Method:
-                        var resolved = instance.TryResolve();
+                        MethodBase resolved = instance.TryResolve();
                         if (resolved == null)
                             MelonLogger.Msg("\tNull Method Instance");
                         else
                             MelonLogger.Msg($"\tMethod Instance: {resolved.DeclaringType?.Name} {resolved.Name}");
                         break;
-                    default:
-                        break;
                 }
-            }
+
             MelonLogger.Msg("");
         }
 

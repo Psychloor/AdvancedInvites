@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30611.23
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedInvites", "AdvancedInvites\AdvancedInvites.csproj", "{BC5BF2ED-004F-40B7-A968-6A718DB1D581}"
 EndProject
 Global
@@ -10,7 +13,21 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Debug|x64.Build.0 = Debug|Any CPU
+		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Debug|x86.Build.0 = Debug|Any CPU
 		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Release|x64.ActiveCfg = Release|Any CPU
+		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Release|x64.Build.0 = Release|Any CPU
+		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Release|x86.ActiveCfg = Release|Any CPU
+		{BC5BF2ED-004F-40B7-A968-6A718DB1D581}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {602F645F-2511-4CE8-8326-CD31309BF322}
 	EndGlobalSection
 EndGlobal

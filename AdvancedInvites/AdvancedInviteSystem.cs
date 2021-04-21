@@ -2,7 +2,6 @@
 {
 
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -19,10 +18,6 @@
     using UnityEngine;
 
     using VRC.Core;
-
-#if DEBUG
-    using UnityEngine;
-#endif
 
     public sealed class AdvancedInviteSystem : MelonMod
     {
@@ -41,39 +36,7 @@
 
         private static MelonPreferences_Category advInvPreferencesCategory;
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate void AcceptNotificationDelegate(IntPtr thisPtr, IntPtr notification);
-
         private static AcceptNotificationDelegate acceptNotificationDelegate;
-
-    #if DEBUG
-        public override void OnUpdate()
-        {
-            if (Input.GetKeyDown(KeyCode.P)) Utilities.Request();
-        }
-
-        // username, userid, type, custom message, details, pic i guess?
-        // details doesn't need requestslot if there's no custom message in it. probably safer to not send any
-        private static bool SendNotificationPatch(string __0, string __1, string __2, string __3, NotificationDetails __4, Il2CppStructArray<byte> __5)
-        {
-            // Method_Public_Void_String_String_String_String_NotificationDetails_ArrayOf_Byte_0
-            MelonLogger.Msg("Sending Notification:");
-            MelonLogger.Msg($"\tString: {__0}");
-            MelonLogger.Msg($"\tString: {__1}");
-            MelonLogger.Msg($"\tString: {__2}");
-            MelonLogger.Msg($"\tString: {__3}");
-            MelonLogger.Msg($"\tDetails: {__4?.ToString()}");
-            MelonLogger.Msg($"\tLength: {__5?.Length} Bytes: {__5}");
-            MelonLogger.Msg("");
-
-            return true;
-        }
-
-        private static void SetStreamerModePostfix(bool __0)
-        {
-            MelonLogger.Msg("Streamer Mode Set To " + __0);
-        }
-    #endif
 
         public override void OnApplicationStart()
         {
@@ -95,20 +58,21 @@
             Localization.Load();
 
         #if DEBUG
-                DebugTesting.Test();
-                
-                try
-                {
-                    MethodInfo sendNotificationMethod = typeof(NotificationManager).GetMethod(
-                        nameof(NotificationManager.Method_Public_Void_String_String_String_String_NotificationDetails_ArrayOf_Byte_0),
-                        BindingFlags.Public | BindingFlags.Instance);
-                    Harmony.Patch(sendNotificationMethod, new HarmonyMethod(
-                        typeof(AdvancedInviteSystem).GetMethod(nameof(SendNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
-                }
-                catch (Exception e)
-                {
-                    MelonLogger.Error("Error Patching SendNotification: " + e.Message);
-                }
+            DebugTesting.Test();
+
+            try
+            {
+                MethodInfo sendNotificationMethod = typeof(NotificationManager).GetMethod(
+                    nameof(NotificationManager.Method_Public_Void_String_String_String_String_NotificationDetails_ArrayOf_Byte_0),
+                    BindingFlags.Public | BindingFlags.Instance);
+                Harmony.Patch(
+                    sendNotificationMethod,
+                    new HarmonyMethod(typeof(AdvancedInviteSystem).GetMethod(nameof(SendNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("Error Patching SendNotification: " + e.Message);
+            }
         #endif
 
             try
@@ -117,8 +81,9 @@
                 {
                     // Appears to be NotificationManager.Method_Private_Void_Notification_1
                     MethodInfo acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                        m => m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(Notification)
-                                                           && m.XRefScanFor("AcceptNotification for notification:"));
+                        m => m.GetParameters().Length == 1
+                             && m.GetParameters()[0].ParameterType == typeof(Notification)
+                             && m.XRefScanFor("AcceptNotification for notification:"));
                     IntPtr originalMethod = *(IntPtr*)(IntPtr)UnhollowerUtils
                                                               .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(acceptNotificationMethod).GetValue(null);
 
@@ -138,8 +103,11 @@
             {
                 //Appears to be NotificationManager.Method_Private_String_Notification_1
                 MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                    m => m.Name.StartsWith("Method_Private_") && m.ReturnType == typeof(string) && m.GetParameters().Length == 1
-                         && m.GetParameters()[0].ParameterType == typeof(Notification) && m.XRefScanFor("imageUrl"));
+                    m => m.Name.StartsWith("Method_Private_")
+                         && m.ReturnType == typeof(string)
+                         && m.GetParameters().Length == 1
+                         && m.GetParameters()[0].ParameterType == typeof(Notification)
+                         && m.XRefScanFor("imageUrl"));
                 Harmony.Patch(
                     addNotificationMethod,
                     postfix: new HarmonyMethod(
@@ -152,24 +120,7 @@
 
             UserPermissionHandler.LoadSettings();
             WorldPermissionHandler.LoadSettings();
-            MelonCoroutines.Start(WaitForVrChatUiManager());
-        }
 
-        private static IEnumerator WaitForVrChatUiManager()
-        {
-            WaitForSeconds checkRate = new WaitForSeconds(2f);
-            do
-            {
-                yield return checkRate;
-                checkRate.m_Seconds = 2f;
-            }
-            while (Utilities.GetVRCUiManager() == null);
-
-            UiManagerInit();
-        }
-
-        private static void UiManagerInit()
-        {
             UiButtons.Initialize();
             SoundPlayer.Initialize();
         }
@@ -226,7 +177,7 @@
 
                 #if DEBUG
                     if (__0.details?.keys != null)
-                        foreach (var key in __0.details?.keys)
+                        foreach (string key in __0.details?.keys)
                         {
                             MelonLogger.Msg("Invite Details Key: " + key);
                             if (__0.details != null) MelonLogger.Msg("Invite Details Value: " + __0.details[key].ToString());
@@ -353,6 +304,38 @@
 
             acceptNotificationDelegate(thisPtr, notificationPtr);
         }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void AcceptNotificationDelegate(IntPtr thisPtr, IntPtr notification);
+
+    #if DEBUG
+        public override void OnUpdate()
+        {
+            if (Input.GetKeyDown(KeyCode.P)) Utilities.Request();
+        }
+
+        // username, userid, type, custom message, details, pic i guess?
+        // details doesn't need requestslot if there's no custom message in it. probably safer to not send any
+        private static bool SendNotificationPatch(string __0, string __1, string __2, string __3, NotificationDetails __4, Il2CppStructArray<byte> __5)
+        {
+            // Method_Public_Void_String_String_String_String_NotificationDetails_ArrayOf_Byte_0
+            MelonLogger.Msg("Sending Notification:");
+            MelonLogger.Msg($"\tString: {__0}");
+            MelonLogger.Msg($"\tString: {__1}");
+            MelonLogger.Msg($"\tString: {__2}");
+            MelonLogger.Msg($"\tString: {__3}");
+            MelonLogger.Msg($"\tDetails: {__4?.ToString()}");
+            MelonLogger.Msg($"\tLength: {__5?.Length} Bytes: {__5}");
+            MelonLogger.Msg("");
+
+            return true;
+        }
+
+        private static void SetStreamerModePostfix(bool __0)
+        {
+            MelonLogger.Msg("Streamer Mode Set To " + __0);
+        }
+    #endif
 
     }
 

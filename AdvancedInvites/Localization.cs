@@ -18,7 +18,7 @@ namespace AdvancedInvites
 
         private static LocalizedText localizedText;
 
-        private static Regex usernameRegex, worldRegex, instanceRegex;
+        private static Regex userRegex, worldRegex, instanceRegex;
 
         public static void Load()
         {
@@ -44,7 +44,7 @@ namespace AdvancedInvites
                 localizedText = new LocalizedText();
             }
 
-            usernameRegex = new Regex("@Username", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+            userRegex = new Regex("@Username", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
             worldRegex = new Regex("@WorldName", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
             instanceRegex = new Regex("@InstanceType", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         }
@@ -63,11 +63,11 @@ namespace AdvancedInvites
         {
             return ReplaceAllTags(localizedText.PrivatePopup, username, worldName, instanceType);
         }
-        
+
         // Just because some people might forget it's Case-SensiTivE
         private static string ReplaceAllTags(string text, string username, string worldName, string instanceType)
         {
-            text = usernameRegex.Replace(text, username);
+            text = userRegex.Replace(text, username);
             text = worldRegex.Replace(text, worldName);
             return instanceRegex.Replace(text, instanceType);
         }
@@ -85,22 +85,25 @@ namespace AdvancedInvites
         private class LocalizedText
         {
 
-            [JsonProperty(Order = 4)]
+            [JsonProperty(Order = 5)]
             public string DropPortalButton = "Drop Portal";
 
-            [JsonProperty(Order = 3)]
+            [JsonProperty(Order = 4)]
             public string JoinButton = "Join Yourself";
 
-            [JsonProperty(Order = 2)]
+            [JsonProperty(Order = 3)]
             public string PrivatePopup =
                 "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\n\nPrivate Instance so can't drop a portal";
 
-            [JsonProperty(Order = 1)]
+            [JsonProperty(Order = 2)]
             public string PublicPopup =
                 "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\n\nWanna go by yourself or drop a portal for the lads?";
 
-            [JsonProperty(Order = 0)]
+            [JsonProperty(Order = 1)]
             public string Title = "Invitation from @Username";
+            
+            [JsonProperty(Order = 0)]
+            public string Info = @"Tags to use: @Username, @WorldName and @InstanceType. for a new line type \n and if you need a tab then type \t";
 
         }
 

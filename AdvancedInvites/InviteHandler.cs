@@ -20,17 +20,23 @@ namespace AdvancedInvites
         private static Notification currentNotification;
 
         // for the current notification being handled
-        private static string worldId;
-        private static string instanceIdWithTags;
+        private static string worldId, instanceIdWithTags;
 
         public static void HandleInvite(Notification notification)
         {
             currentNotification = notification;
             worldId = notification.details["worldId"].ToString().Split(':')[0];
-            
-            // Whenever vrchat moves away from keeping both same and actually do keep instance as instance only
-            string[] instanceIdDetails = notification.details["instanceId"].ToString().Split(':');
-            instanceIdWithTags = instanceIdDetails.Length > 0 ? instanceIdDetails[1] : instanceIdDetails[0];
+
+            // hmm it gets sent but it's not included when accepting an invite.....
+            if (notification.details.ContainsKey("instanceId"))
+            {
+                string[] instanceIdDetails = notification.details["instanceId"].ToString().Split(':');
+                instanceIdWithTags = instanceIdDetails.Length > 0 ? instanceIdDetails[1] : instanceIdDetails[0];
+            }
+            else
+            {
+                instanceIdWithTags = notification.details["worldId"].ToString().Split(':')[1];
+            }
 
             ApiWorldInstance.AccessType accessType = Utilities.GetAccessType(instanceIdWithTags);
 
@@ -94,7 +100,7 @@ namespace AdvancedInvites
                                 }
                                 catch (Exception e)
                                 {
-                                    MelonLogger.Error("Couldn't delete the notification:\n"+e);
+                                    MelonLogger.Error("Couldn't delete the notification:\n" + e);
                                 }
                         }),
 
@@ -113,9 +119,9 @@ namespace AdvancedInvites
                 }
                 catch (Exception e)
                 {
-                    MelonLogger.Error("Couldn't delete the notification:\n"+e);
+                    MelonLogger.Error("Couldn't delete the notification:\n" + e);
                 }
-            
+
             Networking.GoToRoom($"{worldId}:{instanceIdWithTags}");
         }
 

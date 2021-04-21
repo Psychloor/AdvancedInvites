@@ -103,8 +103,8 @@ namespace AdvancedInvites
                 }
             }
 
-            foreach (string name in Enum.GetNames(typeof(NotificationType))
-                                        .Where(name => File.Exists(GetAudioPath((NotificationType)Enum.Parse(typeof(NotificationType), name)))))
+            foreach (string name in Enum.GetNames(typeof(NotificationType)).Where(
+                name => File.Exists(GetAudioPath((NotificationType)Enum.Parse(typeof(NotificationType), name)))))
                 yield return LoadAudioClip((NotificationType)Enum.Parse(typeof(NotificationType), name));
         }
 
