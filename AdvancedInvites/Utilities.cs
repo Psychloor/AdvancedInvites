@@ -199,7 +199,13 @@ namespace AdvancedInvites
             {
                 if (ourShowPopupWindowSingleDelegate != null) return ourShowPopupWindowSingleDelegate;
                 MethodInfo popupV2Method = typeof(VRCUiPopupManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
-                    m => m.GetParameters().Length == 5 && m.XRefScanFor("Popups/StandardPopupV2"));
+                    m => m.GetParameters().Length == 5
+                         && m.Name.IndexOf("pdm", StringComparison.OrdinalIgnoreCase) == -1
+                         && m.XRefScanFor("Popups/StandardPopupV2")
+                         // Loukylor told me about this
+                         && XrefScanner.UsedBy(m).Any(
+                             xref => xref.Type == XrefType.Method
+                                     && xref.TryResolve()?.Name.IndexOf("OpenSaveSearchPopup", StringComparison.OrdinalIgnoreCase) != -1));
 
                 ourShowPopupWindowSingleDelegate = (ShowPopupWindowSingleDelegate)Delegate.CreateDelegate(
                     typeof(ShowPopupWindowSingleDelegate),

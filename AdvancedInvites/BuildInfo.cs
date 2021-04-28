@@ -31,7 +31,8 @@ namespace AdvancedInvites
         // 1.6.2.1 Build 1067 Deletion
         // 1.6.2.2 Streamer Mode Added
         // 1.6.2.3 Regex for localization, cache worldid and instanceidwithtags
-        public const string Version = "1.6.2.3";
+        // 1.6.2.4 Popup window 1 button sometimes failed
+        public const string Version = "1.6.2.4";
 
     }
 

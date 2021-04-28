@@ -43,32 +43,40 @@ namespace AdvancedInvites
         {
             ICustomShowableLayoutedMenu userPermissionsPopup = ExpansionKitApi.CreateCustomFullMenuPopup(LayoutDescription.WideSlimList);
 
-            userPermissionsPopup.AddLabel("Blacklisted Users");
-            foreach (UserPermissionHandler.PermissionEntry blacklistedUser in UserPermissionHandler.BlacklistedUsers)
-                userPermissionsPopup.AddSimpleButton(
-                    blacklistedUser.DisplayName,
-                    () =>
-                        {
-                            userPermissionsPopup.Hide();
-                            UserPermissionHandler.RemoveFromBlacklist(blacklistedUser.UserId);
-                            UserPermissionHandler.SaveSettings();
-                            ShowUsers();
-                        });
+            if (UserPermissionHandler.BlacklistedUsers.Count > 0)
+            {
+                userPermissionsPopup.AddLabel("Blacklisted Users");
+                foreach (UserPermissionHandler.PermissionEntry blacklistedUser in UserPermissionHandler.BlacklistedUsers)
+                    userPermissionsPopup.AddSimpleButton(
+                        blacklistedUser.DisplayName,
+                        () =>
+                            {
+                                userPermissionsPopup.Hide();
+                                UserPermissionHandler.RemoveFromBlacklist(blacklistedUser.UserId);
+                                UserPermissionHandler.SaveSettings();
+                                ShowUsers();
+                            });
 
-            userPermissionsPopup.AddSpacer();
-            userPermissionsPopup.AddLabel("Whitelisted Users");
-            foreach (UserPermissionHandler.PermissionEntry whitelistedUser in UserPermissionHandler.WhitelistedUsers)
-                userPermissionsPopup.AddSimpleButton(
-                    whitelistedUser.DisplayName,
-                    () =>
-                        {
-                            userPermissionsPopup.Hide();
-                            UserPermissionHandler.RemoveFromWhitelist(whitelistedUser.UserId);
-                            UserPermissionHandler.SaveSettings();
-                            ShowUsers();
-                        });
+                userPermissionsPopup.AddSpacer();
+            }
 
-            userPermissionsPopup.AddSpacer();
+            if (UserPermissionHandler.WhitelistedUsers.Count > 0)
+            {
+                userPermissionsPopup.AddLabel("Whitelisted Users");
+                foreach (UserPermissionHandler.PermissionEntry whitelistedUser in UserPermissionHandler.WhitelistedUsers)
+                    userPermissionsPopup.AddSimpleButton(
+                        whitelistedUser.DisplayName,
+                        () =>
+                            {
+                                userPermissionsPopup.Hide();
+                                UserPermissionHandler.RemoveFromWhitelist(whitelistedUser.UserId);
+                                UserPermissionHandler.SaveSettings();
+                                ShowUsers();
+                            });
+
+                userPermissionsPopup.AddSpacer();
+            }
+
             userPermissionsPopup.AddSimpleButton("Close", () => userPermissionsPopup.Hide());
             userPermissionsPopup.Show();
         }
@@ -77,19 +85,23 @@ namespace AdvancedInvites
         {
             ICustomShowableLayoutedMenu worldsPermissionsPopup = ExpansionKitApi.CreateCustomFullMenuPopup(LayoutDescription.WideSlimList);
 
-            worldsPermissionsPopup.AddLabel("Blacklisted Worlds");
-            foreach (WorldPermissionHandler.PermissionEntry blacklistedWorld in WorldPermissionHandler.BlacklistedWorlds)
-                worldsPermissionsPopup.AddSimpleButton(
-                    blacklistedWorld.WorldName,
-                    () =>
-                        {
-                            worldsPermissionsPopup.Hide();
-                            WorldPermissionHandler.RemoveFromBlacklist(blacklistedWorld.WorldId);
-                            WorldPermissionHandler.SaveSettings();
-                            ShowWorlds();
-                        });
+            if (WorldPermissionHandler.BlacklistedWorlds.Count > 0)
+            {
+                worldsPermissionsPopup.AddLabel("Blacklisted Worlds");
+                foreach (WorldPermissionHandler.PermissionEntry blacklistedWorld in WorldPermissionHandler.BlacklistedWorlds)
+                    worldsPermissionsPopup.AddSimpleButton(
+                        blacklistedWorld.WorldName,
+                        () =>
+                            {
+                                worldsPermissionsPopup.Hide();
+                                WorldPermissionHandler.RemoveFromBlacklist(blacklistedWorld.WorldId);
+                                WorldPermissionHandler.SaveSettings();
+                                ShowWorlds();
+                            });
 
-            worldsPermissionsPopup.AddSpacer();
+                worldsPermissionsPopup.AddSpacer();
+            }
+
             worldsPermissionsPopup.AddSimpleButton("Close", () => worldsPermissionsPopup.Hide());
             worldsPermissionsPopup.Show();
         }

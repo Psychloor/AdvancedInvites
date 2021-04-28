@@ -57,10 +57,6 @@
       <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Newtonsoft.Json.dll</HintPath>
         <Private>False</Private>
     </Reference>
-    <Reference Include="System.IO.Compression">
-      <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\System.IO.Compression.dll</HintPath>
-        <Private>False</Private>
-    </Reference>
     <Reference Include="System.Net.Http">
       <HintPath>F:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\System.Net.Http.dll</HintPath>
         <Private>False</Private>

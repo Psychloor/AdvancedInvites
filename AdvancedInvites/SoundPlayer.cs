@@ -4,13 +4,18 @@ namespace AdvancedInvites
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
 
     using MelonLoader;
 
     using UnityEngine;
+
+    using File = System.IO.File;
+    using FileMode = System.IO.FileMode;
+    using FileStream = System.IO.FileStream;
+    using Path = System.IO.Path;
+    using Stream = System.IO.Stream;
 
     public class SoundPlayer
     {
@@ -127,6 +132,7 @@ namespace AdvancedInvites
                 MelonLogger.Error($"Failed To Load {notificationType} Notification Sound");
             }
         }
+
 
         public static void Initialize()
         {
