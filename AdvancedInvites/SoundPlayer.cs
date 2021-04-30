@@ -1,19 +1,27 @@
 namespace AdvancedInvites
 {
 
-    using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
+
+    using Il2CppSystem;
 
     using MelonLoader;
 
     using UnityEngine;
 
+    using VRC.Core;
+
+    using Enum = System.Enum;
+    using Exception = System.Exception;
     using File = System.IO.File;
     using FileMode = System.IO.FileMode;
     using FileStream = System.IO.FileStream;
+    using Object = UnityEngine.Object;
     using Path = System.IO.Path;
     using Stream = System.IO.Stream;
 
@@ -41,14 +49,16 @@ namespace AdvancedInvites
 
         public static float Volume;
 
-        private Dictionary<NotificationType, AudioClip> audioClipDictionary;
+        private readonly Dictionary<NotificationType, AudioClip> audioClipDictionary;
 
         private GameObject audioGameObject;
 
         private AudioSource audioSource;
 
         private SoundPlayer()
-        { }
+        {
+            audioClipDictionary = new Dictionary<NotificationType, AudioClip>();
+        }
 
         private static string GetAudioPath(NotificationType notificationType)
         {
@@ -71,10 +81,22 @@ namespace AdvancedInvites
                 instance.audioSource.PlayOneShot(instance.audioClipDictionary[NotificationType.Default], Volume);
         }
 
-        private static IEnumerator LoadNotificationSounds()
+        internal static IEnumerator LoadNotificationSounds()
         {
+            // in case we're reloading
+            if (instance.audioClipDictionary.Count > 0)
+            {
+                foreach (NotificationType notificationType in instance.audioClipDictionary.Keys)
+                {
+                    Object.DestroyImmediate(instance.audioClipDictionary[notificationType]);
+                }
+
+                // Give it a little time to update
+                yield return new WaitForSeconds(.2f);
+                instance.audioClipDictionary.Clear();
+            }
+
             MelonLogger.Msg("Loading Notification Sound(s)");
-            instance.audioClipDictionary = new Dictionary<NotificationType, AudioClip>();
 
             // Legacy Convert
             if (File.Exists(Path.GetFullPath(Path.Combine(AudioResourceFolder, "Notification.ogg"))))
@@ -108,6 +130,7 @@ namespace AdvancedInvites
                 }
             }
 
+            // look through all types and see if the soundfile exists
             foreach (string name in Enum.GetNames(typeof(NotificationType)).Where(
                 name => File.Exists(GetAudioPath((NotificationType)Enum.Parse(typeof(NotificationType), name)))))
                 yield return LoadAudioClip((NotificationType)Enum.Parse(typeof(NotificationType), name));
@@ -115,6 +138,7 @@ namespace AdvancedInvites
 
         private static IEnumerator LoadAudioClip(NotificationType notificationType)
         {
+
             WWW request = new WWW(GetAudioPath(notificationType), null, new Il2CppSystem.Collections.Generic.Dictionary<string, string>());
             AudioClip audioClip = request.GetAudioClip(false, false, AudioType.OGGVORBIS);
 
@@ -145,8 +169,10 @@ namespace AdvancedInvites
             instance.audioSource.dopplerLevel = 0f;
             instance.audioSource.spatialBlend = 0f;
             instance.audioSource.spatialize = false;
-
+            
             MelonCoroutines.Start(LoadNotificationSounds());
+            
+            
         }
 
     }

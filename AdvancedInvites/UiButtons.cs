@@ -37,6 +37,11 @@ namespace AdvancedInvites
 
             // World Details menu
             ExpansionKitApi.GetExpandedMenu(ExpandedMenu.WorldDetailsMenu).AddSimpleButton("AdvancedInvites\nBlacklist", BlacklistWorld);
+
+            // Settings Menu
+            ExpansionKitApi.GetExpandedMenu(ExpandedMenu.SettingsMenu).AddSimpleButton(
+                "AdvancedInvites\nReload Sounds",
+                () => MelonCoroutines.Start(SoundPlayer.LoadNotificationSounds()));
         }
 
         private static void ShowUsers()
