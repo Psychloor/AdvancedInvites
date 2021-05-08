@@ -69,6 +69,7 @@ namespace AdvancedInvites
         {
             if (instance == null
                 || instance.audioSource == null) return;
+            if (instance.audioSource.isPlaying) return;
 
             instance.audioSource.outputAudioMixerGroup = null;
 
