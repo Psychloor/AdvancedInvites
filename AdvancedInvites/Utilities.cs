@@ -137,7 +137,7 @@ namespace AdvancedInvites
                     if (!method.XRefScanFor("voteToKick")) continue;
 
                     // Notification Manager count seems to be at least 3 of
-                    if (method.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) != 2
+                    if (method.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) < 2
                         || method.XRefScanMethodCount(null, nameof(NotificationManager)) < 3) continue;
 
                     // The real one is used by the quick menu and itself 
@@ -154,8 +154,6 @@ namespace AdvancedInvites
                         method);
                     return ourDeleteNotificationDelegate;
                 }
-
-                MelonLogger.Warning("Couldn't find the delete notification method. returning null which will give you an error probably :D!");
                 return null;
             }
         }
@@ -328,7 +326,15 @@ namespace AdvancedInvites
 
         public static void DeleteNotification(Notification notification)
         {
-            GetDeleteNotificationDelegate(notification);
+            try
+            {
+                GetDeleteNotificationDelegate(notification);
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Warning("Couldn't find the delete notification method. it'll still work, just delete the notification yourself after or let it get auto-deleted by vrchat itself");
+                MelonLogger.Error(e);
+            }
         }
 
         public static Transform GetLocalPlayerTransform()

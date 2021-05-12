@@ -33,7 +33,7 @@ namespace AdvancedInvites
         // 1.6.2.3 Regex for localization, cache worldid and instanceidwithtags
         // 1.6.2.4 Popup window 1 button sometimes failed
         // 1.6.2.5 Reload Audio Files
-        public const string Version = "1.6.2.5";
+        public const string Version = "1.6.2.6";
 
     }
 

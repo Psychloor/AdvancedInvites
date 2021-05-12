@@ -94,14 +94,7 @@ namespace AdvancedInvites
                             // CreatePortal (before il2cpp)
                             bool created = Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward, ShowAlerts);
                             if (created && DeleteNotifications)
-                                try
-                                {
-                                    Utilities.DeleteNotification(currentNotification);
-                                }
-                                catch (Exception e)
-                                {
-                                    MelonLogger.Error("Couldn't delete the notification:\n" + e);
-                                }
+                                Utilities.DeleteNotification(currentNotification);
                         }),
 
                 // On Failure
@@ -113,14 +106,7 @@ namespace AdvancedInvites
             Utilities.HideCurrentPopup();
 
             if (DeleteNotifications)
-                try
-                {
-                    Utilities.DeleteNotification(currentNotification);
-                }
-                catch (Exception e)
-                {
-                    MelonLogger.Error("Couldn't delete the notification:\n" + e);
-                }
+                Utilities.DeleteNotification(currentNotification);
 
             Networking.GoToRoom($"{worldId}:{instanceIdWithTags}");
         }
