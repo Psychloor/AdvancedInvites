@@ -33,7 +33,8 @@ namespace AdvancedInvites
         // 1.6.2.3 Regex for localization, cache worldid and instanceidwithtags
         // 1.6.2.4 Popup window 1 button sometimes failed
         // 1.6.2.5 Reload Audio Files
-        public const string Version = "1.6.2.6";
+        // 1.6.2.7 build 1095 broke shit /tableflip
+        public const string Version = "1.6.2.7";
 
     }
 

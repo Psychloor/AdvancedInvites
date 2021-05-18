@@ -15,6 +15,8 @@
 
     using UnhollowerBaseLib;
 
+    using UnhollowerRuntimeLib.XrefScans;
+
     using UnityEngine;
 
     using VRC.Core;
@@ -83,7 +85,8 @@
                     MethodInfo acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
                         m => m.GetParameters().Length == 1
                              && m.GetParameters()[0].ParameterType == typeof(Notification)
-                             && m.XRefScanFor("AcceptNotification for notification:"));
+                             && m.Name.IndexOf("PDM", StringComparison.OrdinalIgnoreCase) == -1
+                             && m.XRefScanFor("AcceptNotification for notification:") && m.XRefScanFor("Could not accept notification because notification details is null"));
                     IntPtr originalMethod = *(IntPtr*)(IntPtr)UnhollowerUtils
                                                               .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(acceptNotificationMethod).GetValue(null);
 
