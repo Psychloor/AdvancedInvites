@@ -7,17 +7,11 @@
     using System.Reflection;
     using System.Runtime.InteropServices;
 
-    using Harmony;
-
     using MelonLoader;
 
     using Transmtn.DTO.Notifications;
 
     using UnhollowerBaseLib;
-
-    using UnhollowerRuntimeLib.XrefScans;
-
-    using UnityEngine;
 
     using VRC.Core;
 
@@ -39,6 +33,8 @@
         private static MelonPreferences_Category advInvPreferencesCategory;
 
         private static AcceptNotificationDelegate acceptNotificationDelegate;
+
+        private static AddNotificationDelegate addNotificationDelegate;
 
         public override void OnApplicationStart()
         {
@@ -79,23 +75,14 @@
 
             try
             {
-                unsafe
-                {
-                    // Appears to be NotificationManager.Method_Private_Void_Notification_1
-                    MethodInfo acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                        m => m.GetParameters().Length == 1
-                             && m.GetParameters()[0].ParameterType == typeof(Notification)
-                             && m.Name.IndexOf("PDM", StringComparison.OrdinalIgnoreCase) == -1
-                             && m.XRefScanFor("AcceptNotification for notification:") && m.XRefScanFor("Could not accept notification because notification details is null"));
-                    IntPtr originalMethod = *(IntPtr*)(IntPtr)UnhollowerUtils
-                                                              .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(acceptNotificationMethod).GetValue(null);
-
-                    MelonUtils.NativeHookAttach(
-                        (IntPtr)(&originalMethod),
-                        typeof(AdvancedInviteSystem).GetMethod(nameof(AcceptNotificationPatch), BindingFlags.Static | BindingFlags.NonPublic)!.MethodHandle
-                                                    .GetFunctionPointer());
-                    acceptNotificationDelegate = Marshal.GetDelegateForFunctionPointer<AcceptNotificationDelegate>(originalMethod);
-                }
+                // Appears to be NotificationManager.Method_Private_Void_Notification_1
+                MethodInfo acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                    m => m.GetParameters().Length == 1
+                         && m.GetParameters()[0].ParameterType == typeof(Notification)
+                         && m.Name.IndexOf("PDM", StringComparison.OrdinalIgnoreCase) == -1
+                         && m.XRefScanFor("AcceptNotification for notification:")
+                         && m.XRefScanFor("Could not accept notification because notification details is null"));
+                acceptNotificationDelegate = Patch<AcceptNotificationDelegate>(acceptNotificationMethod, GetDetour(nameof(AcceptNotificationPatch)));
             }
             catch (Exception e)
             {
@@ -104,24 +91,14 @@
 
             try
             {
-                unsafe
-                {
-                    //Appears to be NotificationManager.Method_Private_String_Notification_1
-                    MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                        m => m.Name.StartsWith("Method_Private_")
-                             && m.ReturnType == typeof(string)
-                             && m.GetParameters().Length == 1
-                             && m.GetParameters()[0].ParameterType == typeof(Notification)
-                             && m.XRefScanFor("imageUrl"));
-                    IntPtr originalMethod = *(IntPtr*)(IntPtr)UnhollowerUtils
-                                                              .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(addNotificationMethod).GetValue(null);
-
-                    MelonUtils.NativeHookAttach(
-                        (IntPtr)(&originalMethod),
-                        typeof(AdvancedInviteSystem).GetMethod(nameof(AddNotificationPatch), BindingFlags.Static | BindingFlags.NonPublic)!.MethodHandle
-                                                    .GetFunctionPointer());
-                    addNotificationDelegate = Marshal.GetDelegateForFunctionPointer<AddNotificationDelegate>(originalMethod);
-                }
+                //Appears to be NotificationManager.Method_Private_String_Notification_1
+                MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                    m => m.Name.StartsWith("Method_Private_")
+                         && m.ReturnType == typeof(string)
+                         && m.GetParameters().Length == 1
+                         && m.GetParameters()[0].ParameterType == typeof(Notification)
+                         && m.XRefScanFor("imageUrl"));
+                addNotificationDelegate = Patch<AddNotificationDelegate>(addNotificationMethod, GetDetour(nameof(AddNotificationPatch)));
             }
             catch (Exception e)
             {
@@ -135,10 +112,17 @@
             SoundPlayer.Initialize();
         }
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate IntPtr AddNotificationDelegate(IntPtr instancePtr, IntPtr notificationPtr);
+        private static unsafe TDelegate Patch<TDelegate>(MethodBase originalMethod, IntPtr patchDetour)
+        {
+            IntPtr original = *(IntPtr*)(IntPtr)UnhollowerUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(originalMethod).GetValue(null);
+            MelonUtils.NativeHookAttach((IntPtr)(&original), patchDetour);
+            return Marshal.GetDelegateForFunctionPointer<TDelegate>(original);
+        }
 
-        private static AddNotificationDelegate addNotificationDelegate;
+        private static IntPtr GetDetour(string name)
+        {
+            return typeof(AdvancedInviteSystem).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Static)!.MethodHandle.GetFunctionPointer();
+        }
 
         private static void LoadSettings()
         {
@@ -179,7 +163,7 @@
         {
             if (instancePtr == IntPtr.Zero
                 || notificationPtr == IntPtr.Zero) return IntPtr.Zero;
-            
+
             Notification notification = new Notification(notificationPtr);
             HandleNotification(ref notification);
 
@@ -329,6 +313,9 @@
 
             acceptNotificationDelegate(thisPtr, notificationPtr);
         }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr AddNotificationDelegate(IntPtr instancePtr, IntPtr notificationPtr);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void AcceptNotificationDelegate(IntPtr thisPtr, IntPtr notification);
