@@ -104,17 +104,24 @@
 
             try
             {
-                //Appears to be NotificationManager.Method_Private_String_Notification_1
-                MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                    m => m.Name.StartsWith("Method_Private_")
-                         && m.ReturnType == typeof(string)
-                         && m.GetParameters().Length == 1
-                         && m.GetParameters()[0].ParameterType == typeof(Notification)
-                         && m.XRefScanFor("imageUrl"));
-                Harmony.Patch(
-                    addNotificationMethod,
-                    postfix: new HarmonyMethod(
-                        typeof(AdvancedInviteSystem).GetMethod(nameof(AddNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
+                unsafe
+                {
+                    //Appears to be NotificationManager.Method_Private_String_Notification_1
+                    MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                        m => m.Name.StartsWith("Method_Private_")
+                             && m.ReturnType == typeof(string)
+                             && m.GetParameters().Length == 1
+                             && m.GetParameters()[0].ParameterType == typeof(Notification)
+                             && m.XRefScanFor("imageUrl"));
+                    IntPtr originalMethod = *(IntPtr*)(IntPtr)UnhollowerUtils
+                                                              .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(addNotificationMethod).GetValue(null);
+
+                    MelonUtils.NativeHookAttach(
+                        (IntPtr)(&originalMethod),
+                        typeof(AdvancedInviteSystem).GetMethod(nameof(AddNotificationPatch), BindingFlags.Static | BindingFlags.NonPublic)!.MethodHandle
+                                                    .GetFunctionPointer());
+                    addNotificationDelegate = Marshal.GetDelegateForFunctionPointer<AddNotificationDelegate>(originalMethod);
+                }
             }
             catch (Exception e)
             {
@@ -127,6 +134,11 @@
             UiButtons.Initialize();
             SoundPlayer.Initialize();
         }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr AddNotificationDelegate(IntPtr instancePtr, IntPtr notificationPtr);
+
+        private static AddNotificationDelegate addNotificationDelegate;
 
         private static void LoadSettings()
         {
@@ -163,20 +175,30 @@
         }
 
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
-        private static void AddNotificationPatch(Notification __0)
+        private static IntPtr AddNotificationPatch(IntPtr instancePtr, IntPtr notificationPtr)
+        {
+            if (instancePtr == IntPtr.Zero
+                || notificationPtr == IntPtr.Zero) return IntPtr.Zero;
+            
+            Notification notification = new Notification(notificationPtr);
+            HandleNotification(ref notification);
+
+            return addNotificationDelegate(instancePtr, notificationPtr);
+        }
+
+        private static void HandleNotification(ref Notification notification)
         {
             if (Utilities.GetStreamerMode()) return;
-            if (__0 == null) return;
 
             // Original code doesn't handle much outside worlds so
             if (Utilities.CurrentRoom() == null
                 || Utilities.CurrentWorldInstance() == null) return;
 
-            switch (__0.notificationType.ToLowerInvariant())
+            switch (notification.notificationType.ToLowerInvariant())
             {
                 case "invite":
-                    if (HandledNotifications.Contains(__0.id)) return;
-                    HandledNotifications.Add(__0.id);
+                    if (HandledNotifications.Contains(notification.id)) return;
+                    HandledNotifications.Add(notification.id);
 
                 #if DEBUG
                     if (__0.details?.keys != null)
@@ -190,10 +212,10 @@
                     if (APIUser.CurrentUser.statusIsSetToDoNotDisturb
                         && !ignoreBusyStatus) return;
 
-                    string worldId = __0.details?["worldId"].ToString().Split(':')[0];
-                    if (blacklistEnabled && (UserPermissionHandler.IsBlacklisted(__0.senderUserId) || WorldPermissionHandler.IsBlacklisted(worldId)))
+                    string worldId = notification.details?["worldId"].ToString().Split(':')[0];
+                    if (blacklistEnabled && (UserPermissionHandler.IsBlacklisted(notification.senderUserId) || WorldPermissionHandler.IsBlacklisted(worldId)))
                     {
-                        Utilities.DeleteNotification(__0);
+                        Utilities.DeleteNotification(notification);
                         return;
                     }
 
@@ -202,19 +224,19 @@
                     break;
 
                 case "requestinvite":
-                    if (HandledNotifications.Contains(__0.id)) return;
-                    HandledNotifications.Add(__0.id);
+                    if (HandledNotifications.Contains(notification.id)) return;
+                    HandledNotifications.Add(notification.id);
 
-                    if (blacklistEnabled && UserPermissionHandler.IsBlacklisted(__0.senderUserId))
+                    if (blacklistEnabled && UserPermissionHandler.IsBlacklisted(notification.senderUserId))
                     {
-                        Utilities.DeleteNotification(__0);
+                        Utilities.DeleteNotification(notification);
                         return;
                     }
 
                     if (APIUser.CurrentUser.statusIsSetToDoNotDisturb
                         && !ignoreBusyStatus) return;
 
-                    if (whitelistEnabled && UserPermissionHandler.IsWhitelisted(__0.senderUserId))
+                    if (whitelistEnabled && UserPermissionHandler.IsWhitelisted(notification.senderUserId))
                     {
                         if (!Utilities.AllowedToInvite())
                         {
@@ -223,8 +245,8 @@
                             return;
                         }
 
-                        if (__0.details?.ContainsKey("platform") == true
-                            && !Utilities.IsPlatformCompatibleWithCurrentWorld(__0.details["platform"].ToString()))
+                        if (notification.details?.ContainsKey("platform") == true
+                            && !Utilities.IsPlatformCompatibleWithCurrentWorld(notification.details["platform"].ToString()))
                         {
                             if (!APIUser.CurrentUser.statusIsSetToJoinMe)
 
@@ -240,8 +262,8 @@
                         // Double Sending
                         if (!APIUser.CurrentUser.statusIsSetToJoinMe)
                         {
-                            Utilities.AcceptInviteRequest(__0.senderUserId, __0.senderUsername);
-                            Utilities.DeleteNotification(__0);
+                            Utilities.AcceptInviteRequest(notification.senderUserId, notification.senderUsername);
+                            Utilities.DeleteNotification(notification);
                         }
 
                         if (APIUser.CurrentUser.statusIsSetToJoinMe && joinMeNotifyRequest)
@@ -261,16 +283,16 @@
                     return;
 
                 case "votetokick":
-                    if (HandledNotifications.Contains(__0.id)) return;
-                    HandledNotifications.Add(__0.id);
+                    if (HandledNotifications.Contains(notification.id)) return;
+                    HandledNotifications.Add(notification.id);
 
                     if (voteToKickSoundEnabled)
                         SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.VoteToKick);
                     break;
 
                 case "friendrequest":
-                    if (HandledNotifications.Contains(__0.id)) return;
-                    HandledNotifications.Add(__0.id);
+                    if (HandledNotifications.Contains(notification.id)) return;
+                    HandledNotifications.Add(notification.id);
 
                     if (friendRequestSoundEnabled)
                         SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.FriendRequest);
