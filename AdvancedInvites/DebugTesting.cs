@@ -3,9 +3,14 @@ namespace AdvancedInvites
 {
 
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
     using MelonLoader;
+
+    using Transmtn.DTO.Notifications;
+
+    using UnhollowerBaseLib;
 
     using UnhollowerRuntimeLib.XrefScans;
 
@@ -14,6 +19,15 @@ namespace AdvancedInvites
 
         internal static void Test()
         {
+            foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(
+                m => m.ReturnType == typeof(void)
+                     && m.GetParameters().Length == 2
+                     && m.GetParameters()[0].ParameterType == typeof(Notification)
+                     && m.GetParameters()[1].ParameterType.IsEnum))
+            {
+                methodInfo.XrefDump();
+            }
+
             /*MelonLogger.Msg("Checking For Delete");
             foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {

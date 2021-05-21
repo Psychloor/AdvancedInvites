@@ -7,11 +7,15 @@
     using System.Reflection;
     using System.Runtime.InteropServices;
 
+    using Harmony;
+
     using MelonLoader;
 
     using Transmtn.DTO.Notifications;
 
     using UnhollowerBaseLib;
+
+    using UnityEngine;
 
     using VRC.Core;
 
@@ -165,7 +169,11 @@
                 || notificationPtr == IntPtr.Zero) return IntPtr.Zero;
 
             Notification notification = new Notification(notificationPtr);
-            HandleNotification(ref notification);
+            if (!HandledNotifications.Contains(notification.id))
+            {
+                HandledNotifications.Add(notification.id);
+                HandleNotification(ref notification);
+            }
 
             return addNotificationDelegate(instancePtr, notificationPtr);
         }
@@ -181,15 +189,12 @@
             switch (notification.notificationType.ToLowerInvariant())
             {
                 case "invite":
-                    if (HandledNotifications.Contains(notification.id)) return;
-                    HandledNotifications.Add(notification.id);
-
                 #if DEBUG
-                    if (__0.details?.keys != null)
-                        foreach (string key in __0.details?.keys)
+                    if (notification.details?.keys != null)
+                        foreach (string key in notification.details?.keys)
                         {
                             MelonLogger.Msg("Invite Details Key: " + key);
-                            if (__0.details != null) MelonLogger.Msg("Invite Details Value: " + __0.details[key].ToString());
+                            if (notification.details != null) MelonLogger.Msg("Invite Details Value: " + notification.details[key].ToString());
                         }
                 #endif
 
@@ -208,9 +213,6 @@
                     break;
 
                 case "requestinvite":
-                    if (HandledNotifications.Contains(notification.id)) return;
-                    HandledNotifications.Add(notification.id);
-
                     if (blacklistEnabled && UserPermissionHandler.IsBlacklisted(notification.senderUserId))
                     {
                         Utilities.DeleteNotification(notification);
@@ -267,17 +269,11 @@
                     return;
 
                 case "votetokick":
-                    if (HandledNotifications.Contains(notification.id)) return;
-                    HandledNotifications.Add(notification.id);
-
                     if (voteToKickSoundEnabled)
                         SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.VoteToKick);
                     break;
 
                 case "friendrequest":
-                    if (HandledNotifications.Contains(notification.id)) return;
-                    HandledNotifications.Add(notification.id);
-
                     if (friendRequestSoundEnabled)
                         SoundPlayer.PlayNotificationSound(SoundPlayer.NotificationType.FriendRequest);
                     break;
