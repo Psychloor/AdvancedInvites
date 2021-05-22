@@ -99,10 +99,11 @@
             {
                 //Appears to be NotificationManager.Method_Private_String_Notification_1
                 MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                    m => m.Name.StartsWith("Method_Public_Void_Notification_EnumNPublic")
-                         && m.Name.IndexOf("PDM", StringComparison.OrdinalIgnoreCase) == -1
-                         && m.GetParameters().Length == 2
-                         && m.GetCustomAttribute<CallerCountAttribute>().Count < 6);
+                    m => m.Name.StartsWith("Method_Private_")
+                         && m.ReturnType == typeof(string)
+                         && m.GetParameters().Length == 1
+                         && m.GetParameters()[0].ParameterType == typeof(Notification)
+                         && m.XRefScanFor("imageUrl"));
                 addNotificationDelegate = Patch<AddNotificationDelegate>(addNotificationMethod, GetDetour(nameof(AddNotificationPatch)));
             }
             catch (Exception e)
@@ -163,14 +164,13 @@
             LoadSettings();
         }
 
+
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
-        private static void AddNotificationPatch(IntPtr instancePtr, IntPtr notificationPtr, int historyRange, IntPtr returnedException)
+        private static IntPtr AddNotificationPatch(IntPtr instancePtr, IntPtr notificationPtr, IntPtr returnedException)
         {
             if (instancePtr == IntPtr.Zero
-                || notificationPtr == IntPtr.Zero) return;
+                || notificationPtr == IntPtr.Zero) return IntPtr.Zero;
             
-            MelonLogger.Msg("Notification Added Patch");
-
             Notification notification = new Notification(notificationPtr);
             if (!HandledNotifications.Contains(notification.id))
             {
@@ -178,7 +178,7 @@
                 HandleNotification(ref notification);
             }
 
-            addNotificationDelegate(instancePtr, notificationPtr, historyRange, returnedException);
+            return addNotificationDelegate(instancePtr, notificationPtr, returnedException);
         }
 
         private static void HandleNotification(ref Notification notification)
@@ -315,7 +315,7 @@
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate void AddNotificationDelegate(IntPtr instancePtr, IntPtr notificationPtr, int historyRange, IntPtr returnedException);
+        private delegate IntPtr AddNotificationDelegate(IntPtr instancePtr, IntPtr notificationPtr, IntPtr returnedException);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void AcceptNotificationDelegate(IntPtr thisPtr, IntPtr notification, IntPtr returnedException);

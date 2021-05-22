@@ -110,7 +110,7 @@ namespace AdvancedInvites
             get
             {
                 if (ourCreatePortalDelegate != null) return ourCreatePortalDelegate;
-                MethodInfo portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static).First(
+                MethodInfo portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly).First(
                     m => m.ReturnType == typeof(bool)
                          && m.HasParameters(typeof(ApiWorld), typeof(ApiWorldInstance), typeof(Vector3), typeof(Vector3), typeof(bool))
                          && m.XRefScanFor("admin_dont_allow_portal"));
@@ -460,8 +460,8 @@ namespace AdvancedInvites
             string message,
             NotificationDetails notificationDetails,
             Il2CppStructArray<byte> picDataIGuess = null);
-
-        private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts);
+        
+        private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool withUIErrors);
 
         private delegate void DeleteNotificationDelegate(Notification notification);
 
