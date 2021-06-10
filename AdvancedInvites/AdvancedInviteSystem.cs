@@ -12,7 +12,6 @@
     using Transmtn.DTO.Notifications;
 
     using UnhollowerBaseLib;
-    using UnhollowerBaseLib.Attributes;
 
 #if DEBUG
     using UnityEngine;

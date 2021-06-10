@@ -34,7 +34,8 @@ namespace AdvancedInvites
         // 1.6.2.4 Popup window 1 button sometimes failed
         // 1.6.2.5 Reload Audio Files
         // 1.6.2.7 build 1095 broke shit /tableflip
-        public const string Version = "1.6.2.7";
+        // 1.6.3 ML 0.4.0
+        public const string Version = "1.6.3";
 
     }
 
