@@ -13,12 +13,13 @@
 
     using UnhollowerBaseLib;
 
-#if DEBUG
-    using UnityEngine;
-#endif
-    
-
     using VRC.Core;
+#if DEBUG
+    using HarmonyLib;
+
+    using UnityEngine;
+
+#endif
 
     public sealed class AdvancedInviteSystem : MelonMod
     {
@@ -68,7 +69,7 @@
                 MethodInfo sendNotificationMethod = typeof(NotificationManager).GetMethod(
                     nameof(NotificationManager.Method_Public_Void_String_String_String_String_NotificationDetails_ArrayOf_Byte_0),
                     BindingFlags.Public | BindingFlags.Instance);
-                Harmony.Patch(
+                HarmonyInstance.Patch(
                     sendNotificationMethod,
                     new HarmonyMethod(typeof(AdvancedInviteSystem).GetMethod(nameof(SendNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
             }
@@ -163,13 +164,12 @@
             LoadSettings();
         }
 
-
         // For some reason VRChat keeps doing "AddNotification" twice (AllTime and Recent) about once a second
         private static IntPtr AddNotificationPatch(IntPtr instancePtr, IntPtr notificationPtr, IntPtr returnedException)
         {
             if (instancePtr == IntPtr.Zero
                 || notificationPtr == IntPtr.Zero) return IntPtr.Zero;
-            
+
             Notification notification = new Notification(notificationPtr);
             if (!HandledNotifications.Contains(notification.id))
             {

@@ -24,7 +24,7 @@ namespace AdvancedInvites
     public static class Utilities
     {
 
-        public delegate bool StreamerModeDelegate();
+        //public delegate bool StreamerModeDelegate();
 
         public delegate VRCUiManager VRCUiManagerDelegate();
 
@@ -42,23 +42,21 @@ namespace AdvancedInvites
 
         private static SendNotificationDelegate ourSendNotificationDelegate;
 
-        private static StreamerModeDelegate ourStreamerModeDelegate;
-
-        public static StreamerModeDelegate GetStreamerMode
-        {
-            get
-            {
-                if (ourStreamerModeDelegate != null) return ourStreamerModeDelegate;
-
-                PropertyInfo streamerModeProperty = typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static).First(
-                    property => property.PropertyType == typeof(bool)
-                                && XrefScanner.XrefScan(property.GetSetMethod()).Any(
-                                    xref => xref.Type == XrefType.Global && xref.ReadAsObject()?.ToString().Equals("VRC_STREAMER_MODE_ENABLED") == true));
-
-                ourStreamerModeDelegate = (StreamerModeDelegate)Delegate.CreateDelegate(typeof(StreamerModeDelegate), streamerModeProperty.GetGetMethod());
-                return ourStreamerModeDelegate;
-            }
-        }
+        /* public static StreamerModeDelegate GetStreamerMode
+         {
+             get
+             {
+                 if (ourStreamerModeDelegate != null) return ourStreamerModeDelegate;
+ 
+                 PropertyInfo streamerModeProperty = typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static).First(
+                     property => property.PropertyType == typeof(bool)
+                                 && XrefScanner.XrefScan(property.GetSetMethod()).Any(
+                                     xref => xref.Type == XrefType.Global && xref.ReadAsObject()?.ToString().IndexOf("STREAMER", StringComparison.OrdinalIgnoreCase) != -1));
+ 
+                 ourStreamerModeDelegate = (StreamerModeDelegate)Delegate.CreateDelegate(typeof(StreamerModeDelegate), streamerModeProperty.GetGetMethod());
+                 return ourStreamerModeDelegate;
+             }
+         }*/
 
         private static SendNotificationDelegate SendNotification
         {
@@ -154,6 +152,7 @@ namespace AdvancedInvites
                         method);
                     return ourDeleteNotificationDelegate;
                 }
+
                 return null;
             }
         }
@@ -200,6 +199,7 @@ namespace AdvancedInvites
                     m => m.GetParameters().Length == 5
                          && m.Name.IndexOf("pdm", StringComparison.OrdinalIgnoreCase) == -1
                          && m.XRefScanFor("Popups/StandardPopupV2")
+
                          // Loukylor told me about this
                          && XrefScanner.UsedBy(m).Any(
                              xref => xref.Type == XrefType.Method
@@ -211,6 +211,14 @@ namespace AdvancedInvites
                     popupV2Method);
                 return ourShowPopupWindowSingleDelegate;
             }
+        }
+
+        //private static StreamerModeDelegate ourStreamerModeDelegate;
+
+        public static bool GetStreamerMode()
+        {
+            return VRCInputManager.Method_Public_Static_Boolean_EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique_0(
+                VRCInputManager.EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique.StreamerModeEnabled);
         }
 
     #if DEBUG
@@ -238,27 +246,24 @@ namespace AdvancedInvites
             GetVRCUiManager().field_Private_List_1_String_0.Add(msg);
         }
 
-        public static ApiWorldInstance.AccessType GetAccessType(string tags)
+        public static InstanceAccessType GetAccessType(string tags)
         {
-            if (tags.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.FriendsOfGuests;
-            if (tags.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.FriendsOnly;
-            if (tags.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0) return ApiWorldInstance.AccessType.InvitePlus;
-            return tags.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0
-                       ? ApiWorldInstance.AccessType.InviteOnly
-                       : ApiWorldInstance.AccessType.Public;
+            if (tags.IndexOf("hidden", StringComparison.OrdinalIgnoreCase) >= 0) return InstanceAccessType.FriendsOfGuests;
+            if (tags.IndexOf("friends", StringComparison.OrdinalIgnoreCase) >= 0) return InstanceAccessType.FriendsOnly;
+            if (tags.IndexOf("request", StringComparison.OrdinalIgnoreCase) >= 0) return InstanceAccessType.InvitePlus;
+            return tags.IndexOf("private", StringComparison.OrdinalIgnoreCase) >= 0 ? InstanceAccessType.InviteOnly : InstanceAccessType.Public;
         }
 
-        public static string GetAccessName(ApiWorldInstance.AccessType accessType)
+        public static string GetAccessName(InstanceAccessType accessType)
         {
             return accessType switch
                 {
-                    ApiWorldInstance.AccessType.Public => "Public",
-                    ApiWorldInstance.AccessType.FriendsOfGuests => "Friends+",
-                    ApiWorldInstance.AccessType.FriendsOnly => "Friends Only",
-                    ApiWorldInstance.AccessType.InviteOnly => "Invite Only",
-                    ApiWorldInstance.AccessType.InvitePlus => "Invite+",
-                    ApiWorldInstance.AccessType.Counter => "Coun... wait wut?",
-                    _ => throw new ArgumentOutOfRangeException(nameof(accessType), accessType, "what the fuck happened?")
+                    InstanceAccessType.Public          => "Public",
+                    InstanceAccessType.FriendsOfGuests => "Friends+",
+                    InstanceAccessType.FriendsOnly     => "Friends Only",
+                    InstanceAccessType.InviteOnly      => "Invite Only",
+                    InstanceAccessType.InvitePlus      => "Invite+",
+                    _                                  => throw new ArgumentOutOfRangeException(nameof(accessType), accessType, "what the fuck happened?")
                 };
         }
 
@@ -280,11 +285,11 @@ namespace AdvancedInvites
         {
             ApiWorld currentRoom = CurrentRoom();
             NotificationDetails details = new NotificationDetails();
-            details.Add("worldId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
+            details.Add("worldId", $"{currentRoom.id}:{CurrentWorldInstance().instanceId}");
 
             // don't ask me why, ask vrchat why they added instanceId as
             // a direct copy of worldId with both having both world and instance id
-            details.Add("instanceId", $"{currentRoom.id}:{currentRoom.currentInstanceIdWithTags}");
+            details.Add("instanceId", $"{currentRoom.id}:{CurrentWorldInstance().instanceId}");
 
             //details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
             details.Add("worldName", currentRoom.name);
@@ -305,17 +310,17 @@ namespace AdvancedInvites
         public static bool AllowedToInvite()
         {
             // Instance owner
-            if (CurrentRoom().currentInstanceIdWithTags.IndexOf(APIUser.CurrentUser.id, StringComparison.Ordinal) >= 0) return true;
-            return GetAccessType(CurrentRoom().currentInstanceIdWithTags) switch
+            if (CurrentWorldInstance().ownerId.Equals(APIUser.CurrentUser.id, StringComparison.Ordinal)) return true;
+            return GetAccessType(CurrentWorldInstance().instanceId) switch
                 {
-                    ApiWorldInstance.AccessType.Public          => true,
-                    ApiWorldInstance.AccessType.FriendsOfGuests => true,
-                    ApiWorldInstance.AccessType.InvitePlus      => true,
+                    InstanceAccessType.Public          => true,
+                    InstanceAccessType.FriendsOfGuests => true,
+                    InstanceAccessType.InvitePlus      => true,
 
                     // Not instance owner/not mutual friend so no
-                    ApiWorldInstance.AccessType.FriendsOnly => false,
-                    ApiWorldInstance.AccessType.InviteOnly  => false,
-                    _                                       => false
+                    InstanceAccessType.FriendsOnly => false,
+                    InstanceAccessType.InviteOnly  => false,
+                    _                              => false
                 };
         }
 
@@ -332,7 +337,8 @@ namespace AdvancedInvites
             }
             catch (Exception e)
             {
-                MelonLogger.Warning("Couldn't find the delete notification method. it'll still work, just delete the notification yourself after or let it get auto-deleted by vrchat itself");
+                MelonLogger.Warning(
+                    "Couldn't find the delete notification method. it'll still work, just delete the notification yourself after or let it get auto-deleted by vrchat itself");
                 MelonLogger.Error(e);
             }
         }
@@ -460,7 +466,7 @@ namespace AdvancedInvites
             string message,
             NotificationDetails notificationDetails,
             Il2CppStructArray<byte> picDataIGuess = null);
-        
+
         private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool withUIErrors);
 
         private delegate void DeleteNotificationDelegate(Notification notification);

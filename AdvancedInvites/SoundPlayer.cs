@@ -1,29 +1,18 @@
 namespace AdvancedInvites
 {
 
+    using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Threading;
-
-    using Il2CppSystem;
 
     using MelonLoader;
 
     using UnityEngine;
 
-    using VRC.Core;
-
-    using Enum = System.Enum;
-    using Exception = System.Exception;
-    using File = System.IO.File;
-    using FileMode = System.IO.FileMode;
-    using FileStream = System.IO.FileStream;
     using Object = UnityEngine.Object;
-    using Path = System.IO.Path;
-    using Stream = System.IO.Stream;
 
     public class SoundPlayer
     {
@@ -88,9 +77,7 @@ namespace AdvancedInvites
             if (instance.audioClipDictionary.Count > 0)
             {
                 foreach (NotificationType notificationType in instance.audioClipDictionary.Keys)
-                {
                     Object.DestroyImmediate(instance.audioClipDictionary[notificationType]);
-                }
 
                 // Give it a little time to update
                 yield return new WaitForSeconds(.2f);
@@ -139,7 +126,6 @@ namespace AdvancedInvites
 
         private static IEnumerator LoadAudioClip(NotificationType notificationType)
         {
-
             WWW request = new WWW(GetAudioPath(notificationType), null, new Il2CppSystem.Collections.Generic.Dictionary<string, string>());
             AudioClip audioClip = request.GetAudioClip(false, false, AudioType.OGGVORBIS);
 
@@ -158,7 +144,6 @@ namespace AdvancedInvites
             }
         }
 
-
         public static void Initialize()
         {
             if (instance != null) return;
@@ -170,10 +155,8 @@ namespace AdvancedInvites
             instance.audioSource.dopplerLevel = 0f;
             instance.audioSource.spatialBlend = 0f;
             instance.audioSource.spatialize = false;
-            
+
             MelonCoroutines.Start(LoadNotificationSounds());
-            
-            
         }
 
     }

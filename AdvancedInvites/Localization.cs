@@ -88,6 +88,9 @@ namespace AdvancedInvites
             [JsonProperty(Order = 5)]
             public string DropPortalButton = "Drop Portal";
 
+            [JsonProperty(Order = 0)]
+            public string Info = @"Tags to use: @Username, @WorldName and @InstanceType. for a new line type \n and if you need a tab then type \t";
+
             [JsonProperty(Order = 4)]
             public string JoinButton = "Join Yourself";
 
@@ -101,9 +104,6 @@ namespace AdvancedInvites
 
             [JsonProperty(Order = 1)]
             public string Title = "Invitation from @Username";
-            
-            [JsonProperty(Order = 0)]
-            public string Info = @"Tags to use: @Username, @WorldName and @InstanceType. for a new line type \n and if you need a tab then type \t";
 
         }
 

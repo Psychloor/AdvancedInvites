@@ -3,14 +3,9 @@ namespace AdvancedInvites
 {
 
     using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection;
 
     using MelonLoader;
-
-    using Transmtn.DTO.Notifications;
-
-    using UnhollowerBaseLib;
 
     using UnhollowerRuntimeLib.XrefScans;
 
@@ -19,14 +14,25 @@ namespace AdvancedInvites
 
         internal static void Test()
         {
-            foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(
+            /*foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(
                 m => m.ReturnType == typeof(void)
                      && m.GetParameters().Length == 2
                      && m.GetParameters()[0].ParameterType == typeof(Notification)
                      && m.GetParameters()[1].ParameterType.IsEnum))
             {
                 methodInfo.XrefDump();
-            }
+            }*/
+
+            /*var properties = typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly).Where(p => p.PropertyType == typeof(VRCInputManager.ObjectNPublicObTyStTFuT2Fu2ObUnique<bool>));
+            foreach (var property in properties)
+            {
+                VRCInputManager.ObjectNPublicObTyStTFuT2Fu2ObUnique<bool> setting =
+                    (VRCInputManager.ObjectNPublicObTyStTFuT2Fu2ObUnique<bool>)property.GetGetMethod().Invoke(null, null);
+                if (setting.field_Public_String_0.IndexOf("STREAMER", StringComparison.OrdinalIgnoreCase) != -1)
+                {
+                    setting.prop_EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique_0 == VRCInputManager.EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique.StreamerModeEnabled
+                }
+            }*/
 
             /*MelonLogger.Msg("Checking For Delete");
             foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))

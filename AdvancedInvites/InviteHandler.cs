@@ -3,8 +3,6 @@ namespace AdvancedInvites
 
     using System;
 
-    using MelonLoader;
-
     using Transmtn.DTO.Notifications;
 
     using UnityEngine;
@@ -38,16 +36,16 @@ namespace AdvancedInvites
                 instanceIdWithTags = notification.details["worldId"].ToString().Split(':')[1];
             }
 
-            ApiWorldInstance.AccessType accessType = Utilities.GetAccessType(instanceIdWithTags);
+            InstanceAccessType accessType = Utilities.GetAccessType(instanceIdWithTags);
 
             var worldName = notification.details["worldName"].ToString();
             string instanceType = Utilities.GetAccessName(accessType);
 
             switch (accessType)
             {
-                case ApiWorldInstance.AccessType.Public:
-                case ApiWorldInstance.AccessType.FriendsOfGuests:
-                case ApiWorldInstance.AccessType.InvitePlus:
+                case InstanceAccessType.Public:
+                case InstanceAccessType.FriendsOfGuests:
+                case InstanceAccessType.InvitePlus:
                     Utilities.ShowPopupWindow(
                         Localization.GetTitle(notification.senderUsername, worldName, instanceType),
                         Localization.GetPublicPopup(notification.senderUsername, worldName, instanceType),
@@ -57,8 +55,8 @@ namespace AdvancedInvites
                         DropPortal);
                     break;
 
-                case ApiWorldInstance.AccessType.FriendsOnly:
-                case ApiWorldInstance.AccessType.InviteOnly:
+                case InstanceAccessType.FriendsOnly:
+                case InstanceAccessType.InviteOnly:
                     Utilities.ShowPopupWindow(
                         Localization.GetTitle(notification.senderUsername, worldName, instanceType),
                         Localization.GetPrivatePopup(notification.senderUsername, worldName, instanceType),
@@ -74,7 +72,6 @@ namespace AdvancedInvites
 
         private static void DropPortal()
         {
-            const int PlayerCount = 0;
             const bool ShowAlerts = true;
 
             // Fetch the world to know it exists and also needed for the world tags during the portal creation stage
@@ -87,7 +84,7 @@ namespace AdvancedInvites
                         {
                             Utilities.HideCurrentPopup();
                             ApiWorld apiWorld = container.Model.Cast<ApiWorld>();
-                            ApiWorldInstance apiWorldInstance = new ApiWorldInstance(apiWorld, instanceIdWithTags, PlayerCount);
+                            ApiWorldInstance apiWorldInstance = new ApiWorldInstance(apiWorld, instanceIdWithTags);
 
                             Transform playerTransform = Utilities.GetLocalPlayerTransform();
 
