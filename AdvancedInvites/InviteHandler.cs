@@ -6,6 +6,7 @@ namespace AdvancedInvites
     using Transmtn.DTO.Notifications;
 
     using UnityEngine;
+    using UnityEngine.Diagnostics;
 
     using VRC.Core;
     using VRC.SDKBase;
@@ -37,6 +38,7 @@ namespace AdvancedInvites
             }
 
             InstanceAccessType accessType = Utilities.GetAccessType(instanceIdWithTags);
+            Utilities.InstanceRegion region = Utilities.GetInstanceRegion(instanceIdWithTags);
 
             var worldName = notification.details["worldName"].ToString();
             string instanceType = Utilities.GetAccessName(accessType);
@@ -47,8 +49,8 @@ namespace AdvancedInvites
                 case InstanceAccessType.FriendsOfGuests:
                 case InstanceAccessType.InvitePlus:
                     Utilities.ShowPopupWindow(
-                        Localization.GetTitle(notification.senderUsername, worldName, instanceType),
-                        Localization.GetPublicPopup(notification.senderUsername, worldName, instanceType),
+                        Localization.GetTitle(notification.senderUsername, worldName, instanceType, Utilities.RegionToName(region)),
+                        Localization.GetPublicPopup(notification.senderUsername, worldName, instanceType, Utilities.RegionToName(region)),
                         Localization.GetJoinButton(),
                         JoinYourself,
                         Localization.GetDropPortalButton(),
@@ -58,8 +60,8 @@ namespace AdvancedInvites
                 case InstanceAccessType.FriendsOnly:
                 case InstanceAccessType.InviteOnly:
                     Utilities.ShowPopupWindow(
-                        Localization.GetTitle(notification.senderUsername, worldName, instanceType),
-                        Localization.GetPrivatePopup(notification.senderUsername, worldName, instanceType),
+                        Localization.GetTitle(notification.senderUsername, worldName, instanceType, Utilities.RegionToName(region)),
+                        Localization.GetPrivatePopup(notification.senderUsername, worldName, instanceType, Utilities.RegionToName(region)),
                         Localization.GetJoinButton(),
                         JoinYourself);
                     break;

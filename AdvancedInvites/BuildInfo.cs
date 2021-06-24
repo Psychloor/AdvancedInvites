@@ -36,7 +36,8 @@ namespace AdvancedInvites
         // 1.6.2.7 build 1095 broke shit /tableflip
         // 1.6.3 ML 0.4.0
         // 1.6.4 Build 1106
-        public const string Version = "1.6.4";
+        // 1.6.5 instance caching and regions
+        public const string Version = "1.6.5";
 
     }
 

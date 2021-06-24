@@ -38,6 +38,17 @@ namespace AdvancedInvites
             if (tags.IndexOf("region(eu)", StringComparison.OrdinalIgnoreCase) != -1) return InstanceRegion.EU;
             return tags.IndexOf("region(jp)", StringComparison.OrdinalIgnoreCase) != -1 ? InstanceRegion.JP : InstanceRegion.US;
         }
+
+        public static string RegionToName(InstanceRegion region)
+        {
+            return region switch
+                {
+                    InstanceRegion.US => "USA",
+                    InstanceRegion.EU => "Europe",
+                    InstanceRegion.JP => "Japan",
+                    _                 => throw new ArgumentOutOfRangeException(nameof(region), region, null)
+                };
+        }
         
         //public delegate bool StreamerModeDelegate();
 

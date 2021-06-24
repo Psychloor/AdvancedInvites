@@ -18,7 +18,7 @@ namespace AdvancedInvites
 
         private static LocalizedText localizedText;
 
-        private static Regex userRegex, worldRegex, instanceRegex;
+        private static Regex userRegex, worldRegex, instanceRegex, regionRegex;
 
         public static void Load()
         {
@@ -31,6 +31,12 @@ namespace AdvancedInvites
                 MelonLogger.Msg("Localization File Not Found. Creating It");
                 File.WriteAllText(FilePath, JsonConvert.SerializeObject(localizedText, Formatting.Indented), Encoding.UTF8);
             }
+
+            /*if (File.GetLastWriteTime(FilePath).Date < new DateTime(2021, 6, 23))
+            {
+                MelonLogger.Msg("Old localization found, resetting it");
+                File.WriteAllText(FilePath, JsonConvert.SerializeObject(localizedText, Formatting.Indented), Encoding.UTF8);
+            }*/
 
             try
             {
@@ -47,28 +53,30 @@ namespace AdvancedInvites
             userRegex = new Regex("@Username", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
             worldRegex = new Regex("@WorldName", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
             instanceRegex = new Regex("@InstanceType", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+            regionRegex = new Regex("@Region", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         }
 
-        public static string GetTitle(string username, string worldName, string instanceType)
+        public static string GetTitle(string username, string worldName, string instanceType, string region)
         {
-            return ReplaceAllTags(localizedText.Title, username, worldName, instanceType);
+            return ReplaceAllTags(localizedText.Title, username, worldName, instanceType, region);
         }
 
-        public static string GetPublicPopup(string username, string worldName, string instanceType)
+        public static string GetPublicPopup(string username, string worldName, string instanceType,string region)
         {
-            return ReplaceAllTags(localizedText.PublicPopup, username, worldName, instanceType);
+            return ReplaceAllTags(localizedText.PublicPopup, username, worldName, instanceType, region);
         }
 
-        public static string GetPrivatePopup(string username, string worldName, string instanceType)
+        public static string GetPrivatePopup(string username, string worldName, string instanceType, string region)
         {
-            return ReplaceAllTags(localizedText.PrivatePopup, username, worldName, instanceType);
+            return ReplaceAllTags(localizedText.PrivatePopup, username, worldName, instanceType, region);
         }
 
         // Just because some people might forget it's Case-SensiTivE
-        private static string ReplaceAllTags(string text, string username, string worldName, string instanceType)
+        private static string ReplaceAllTags(string text, string username, string worldName, string instanceType, string region)
         {
             text = userRegex.Replace(text, username);
             text = worldRegex.Replace(text, worldName);
+            text = regionRegex.Replace(text, region);
             return instanceRegex.Replace(text, instanceType);
         }
 
@@ -89,18 +97,18 @@ namespace AdvancedInvites
             public string DropPortalButton = "Drop Portal";
 
             [JsonProperty(Order = 0)]
-            public string Info = @"Tags to use: @Username, @WorldName and @InstanceType. for a new line type \n and if you need a tab then type \t";
+            public string Info = @"Tags to use: @Username, @WorldName, @InstanceType, and @Region. for a new line type \n and if you need a tab then type \t";
 
             [JsonProperty(Order = 4)]
             public string JoinButton = "Join Yourself";
 
             [JsonProperty(Order = 3)]
             public string PrivatePopup =
-                "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\n\nPrivate Instance so can't drop a portal";
+                "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\nRegion:@Region\nPrivate Instance so can't drop a portal";
 
             [JsonProperty(Order = 2)]
             public string PublicPopup =
-                "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\n\nWanna go by yourself or drop a portal for the lads?";
+                "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\nRegion:@Region\nWanna go by yourself or drop a portal for the lads?";
 
             [JsonProperty(Order = 1)]
             public string Title = "Invitation from @Username";
