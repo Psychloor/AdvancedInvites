@@ -111,12 +111,44 @@
                 MelonLogger.Error("Error Patching AddNotification: " + e.Message);
             }
 
+            try
+            {
+                // Faded to and joined and initialized room
+                MethodInfo fadeMethod = typeof(VRCUiManager).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).First(
+                    m => m.Name.StartsWith("Method_Public_Void_String_Single_Action_")
+                         && m.Name.IndexOf("PDM", StringComparison.OrdinalIgnoreCase) == -1
+                         && m.GetParameters().Length == 3);
+                origFadeTo = Patch<FadeTo>(fadeMethod, GetDetour(nameof(FadeToPatch)));
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("Error Patching FadeTo: " + e.Message);
+            }
+
             UserPermissionHandler.LoadSettings();
             WorldPermissionHandler.LoadSettings();
 
             UiButtons.Initialize();
             SoundPlayer.Initialize();
         }
+        
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void FadeTo(IntPtr instancePtr, IntPtr fadeNamePtr, float fade, IntPtr actionPtr, IntPtr stackPtr);
+
+        private static FadeTo origFadeTo;
+        private static void FadeToPatch(IntPtr instancePtr, IntPtr fadeNamePtr, float fade, IntPtr actionPtr, IntPtr stackPtr)
+        {
+            if (instancePtr == IntPtr.Zero) return;
+            origFadeTo(instancePtr, fadeNamePtr, fade, actionPtr, stackPtr);
+
+            if (!IL2CPP.Il2CppStringToManaged(fadeNamePtr).Equals("BlackFade", StringComparison.Ordinal)
+                || !fade.Equals(0f)
+                || RoomManager.field_Internal_Static_ApiWorldInstance_0 == null) return;
+
+            Utilities.CurrentInstanceCached = new Utilities.WorldInstanceCache(RoomManager.field_Internal_Static_ApiWorldInstance_0);
+        }
+
 
         private static unsafe TDelegate Patch<TDelegate>(MethodBase originalMethod, IntPtr patchDetour)
         {

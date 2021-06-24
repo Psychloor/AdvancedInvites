@@ -24,6 +24,21 @@ namespace AdvancedInvites
     public static class Utilities
     {
 
+        public enum InstanceRegion
+        {
+
+            US,
+            EU,
+            JP
+
+        }
+
+        public static InstanceRegion GetInstanceRegion(string tags)
+        {
+            if (tags.IndexOf("region(eu)", StringComparison.OrdinalIgnoreCase) != -1) return InstanceRegion.EU;
+            return tags.IndexOf("region(jp)", StringComparison.OrdinalIgnoreCase) != -1 ? InstanceRegion.JP : InstanceRegion.US;
+        }
+        
         //public delegate bool StreamerModeDelegate();
 
         public delegate VRCUiManager VRCUiManagerDelegate();
@@ -285,11 +300,11 @@ namespace AdvancedInvites
         {
             ApiWorld currentRoom = CurrentRoom();
             NotificationDetails details = new NotificationDetails();
-            details.Add("worldId", $"{currentRoom.id}:{CurrentWorldInstance().instanceId}");
+            details.Add("worldId", $"{currentRoom.id}:{CurrentInstanceCached.InstanceId}");
 
             // don't ask me why, ask vrchat why they added instanceId as
             // a direct copy of worldId with both having both world and instance id
-            details.Add("instanceId", $"{currentRoom.id}:{CurrentWorldInstance().instanceId}");
+            details.Add("instanceId", $"{currentRoom.id}:{CurrentInstanceCached.InstanceId}");
 
             //details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
             details.Add("worldName", currentRoom.name);
@@ -310,8 +325,8 @@ namespace AdvancedInvites
         public static bool AllowedToInvite()
         {
             // Instance owner
-            if (CurrentWorldInstance().ownerId.Equals(APIUser.CurrentUser.id, StringComparison.Ordinal)) return true;
-            return GetAccessType(CurrentWorldInstance().instanceId) switch
+            if (CurrentInstanceCached.OwnerId.Equals(APIUser.CurrentUser.id, StringComparison.Ordinal)) return true;
+            return CurrentInstanceCached.AccessType switch
                 {
                     InstanceAccessType.Public          => true,
                     InstanceAccessType.FriendsOfGuests => true,
@@ -458,6 +473,26 @@ namespace AdvancedInvites
             MelonLogger.Warning($"XRefScanMethodCount \"{methodBase}\" has all null/empty parameters. Returning -1");
             return -1;
         }
+
+        internal struct WorldInstanceCache
+        {
+
+            public string InstanceId { get; private set; }
+
+            public string OwnerId { get; private set; }
+
+            public InstanceAccessType AccessType { get; private set; }
+
+            public WorldInstanceCache(ApiWorldInstance instance)
+            {
+                InstanceId = instance.instanceId;
+                OwnerId = instance.ownerId;
+                AccessType = instance.type;
+            }
+
+        }
+
+        internal static WorldInstanceCache CurrentInstanceCached;
 
         private delegate void SendNotificationDelegate(
             string receiverUserName,
