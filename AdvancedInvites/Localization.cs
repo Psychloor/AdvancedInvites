@@ -104,11 +104,11 @@ namespace AdvancedInvites
 
             [JsonProperty(Order = 3)]
             public string PrivatePopup =
-                "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\nRegion:@Region\nPrivate Instance so can't drop a portal";
+                "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\nRegion: @Region\nPrivate Instance so can't drop a portal";
 
             [JsonProperty(Order = 2)]
             public string PublicPopup =
-                "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\nRegion:@Region\nWanna go by yourself or drop a portal for the lads?";
+                "You have officially been invited to:\n@WorldName\nInstance Type: @InstanceType\nRegion: @Region\nWanna go by yourself or drop a portal for the lads?";
 
             [JsonProperty(Order = 1)]
             public string Title = "Invitation from @Username";
