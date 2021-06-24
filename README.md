@@ -19,6 +19,6 @@ Just name the files either Invite.ogg or InviteRequest.ogg depending on what you
 For just default all in one just change the Default.ogg File
 
 It'll also create a Localization.json file where you can customize the text for each popup.
-Any of the text's except buttons can have @Username, @WorldName and @InstanceType
+Any of the text's except buttons can have @Username, @WorldName, @InstanceType, and @Region
 
 ![Popup once you accept an invite](https://i.imgur.com/2J0TMxi.png)
