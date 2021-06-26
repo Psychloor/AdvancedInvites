@@ -61,7 +61,7 @@ namespace AdvancedInvites
             return ReplaceAllTags(localizedText.Title, username, worldName, instanceType, region);
         }
 
-        public static string GetPublicPopup(string username, string worldName, string instanceType,string region)
+        public static string GetPublicPopup(string username, string worldName, string instanceType, string region)
         {
             return ReplaceAllTags(localizedText.PublicPopup, username, worldName, instanceType, region);
         }

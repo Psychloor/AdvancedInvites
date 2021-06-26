@@ -14,6 +14,7 @@
     using UnhollowerBaseLib;
 
     using VRC.Core;
+
 #if DEBUG
     using HarmonyLib;
 
@@ -131,12 +132,12 @@
             UiButtons.Initialize();
             SoundPlayer.Initialize();
         }
-        
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void FadeTo(IntPtr instancePtr, IntPtr fadeNamePtr, float fade, IntPtr actionPtr, IntPtr stackPtr);
 
         private static FadeTo origFadeTo;
+
         private static void FadeToPatch(IntPtr instancePtr, IntPtr fadeNamePtr, float fade, IntPtr actionPtr, IntPtr stackPtr)
         {
             if (instancePtr == IntPtr.Zero) return;
@@ -148,7 +149,6 @@
 
             Utilities.CurrentInstanceCached = new Utilities.WorldInstanceCache(RoomManager.field_Internal_Static_ApiWorldInstance_0);
         }
-
 
         private static unsafe TDelegate Patch<TDelegate>(MethodBase originalMethod, IntPtr patchDetour)
         {

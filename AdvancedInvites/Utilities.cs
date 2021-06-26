@@ -28,7 +28,9 @@ namespace AdvancedInvites
         {
 
             US,
+
             EU,
+
             JP
 
         }
@@ -49,7 +51,7 @@ namespace AdvancedInvites
                     _                 => throw new ArgumentOutOfRangeException(nameof(region), region, null)
                 };
         }
-        
+
         //public delegate bool StreamerModeDelegate();
 
         public delegate VRCUiManager VRCUiManagerDelegate();
@@ -488,11 +490,11 @@ namespace AdvancedInvites
         internal struct WorldInstanceCache
         {
 
-            public string InstanceId { get; private set; }
+            public string InstanceId { get; }
 
-            public string OwnerId { get; private set; }
+            public string OwnerId { get; }
 
-            public InstanceAccessType AccessType { get; private set; }
+            public InstanceAccessType AccessType { get; }
 
             public WorldInstanceCache(ApiWorldInstance instance)
             {

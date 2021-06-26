@@ -6,7 +6,6 @@ namespace AdvancedInvites
     using Transmtn.DTO.Notifications;
 
     using UnityEngine;
-    using UnityEngine.Diagnostics;
 
     using VRC.Core;
     using VRC.SDKBase;
