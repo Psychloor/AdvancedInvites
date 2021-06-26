@@ -487,7 +487,7 @@ namespace AdvancedInvites
             return -1;
         }
 
-        internal struct WorldInstanceCache
+        internal readonly struct WorldInstanceCache
         {
 
             public string InstanceId { get; }
