@@ -338,7 +338,7 @@ namespace AdvancedInvites
         public static bool AllowedToInvite()
         {
             // Instance owner
-            if (CurrentInstanceCached.OwnerId.Equals(APIUser.CurrentUser.id, StringComparison.Ordinal)) return true;
+            if (CurrentInstanceCached.OwnerId?.Equals(APIUser.CurrentUser.id, StringComparison.Ordinal) == true) return true;
             return CurrentInstanceCached.AccessType switch
                 {
                     InstanceAccessType.Public          => true,
