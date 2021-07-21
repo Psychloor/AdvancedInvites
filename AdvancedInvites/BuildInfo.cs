@@ -38,7 +38,8 @@ namespace AdvancedInvites
         // 1.6.4 Build 1106
         // 1.6.5 instance caching and regions
         // 1.6.5.1 https://github.com/Psychloor/AdvancedInvites/issues/7
-        public const string Version = "1.6.5.1";
+        // 1.6.6 mod assistant doesn't like major minor build release semver and crashes
+        public const string Version = "1.6.6";
 
     }
 
