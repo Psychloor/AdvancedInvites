@@ -11,6 +11,7 @@ namespace AdvancedInvites
     using MelonLoader;
 
     using UnityEngine;
+    using UnityEngine.Networking;
 
     using Object = UnityEngine.Object;
 
@@ -126,10 +127,13 @@ namespace AdvancedInvites
 
         private static IEnumerator LoadAudioClip(NotificationType notificationType)
         {
-            WWW request = new WWW(GetAudioPath(notificationType), null, new Il2CppSystem.Collections.Generic.Dictionary<string, string>());
-            AudioClip audioClip = request.GetAudioClip(false, false, AudioType.OGGVORBIS);
+            UnityWebRequest request = UnityWebRequest.Get(GetAudioPath(notificationType));
+            request.SendWebRequest();
+            while (!request.isDone)
+                yield return null;
 
-            while (!request.isDone || audioClip.loadState == AudioDataLoadState.Loading) yield return new WaitForEndOfFrame();
+            AudioClip audioClip = WebRequestWWW.InternalCreateAudioClipUsingDH(request.downloadHandler, request.url, false, false, AudioType.UNKNOWN);
+
             request.Dispose();
 
             if (audioClip.loadState == AudioDataLoadState.Loaded)
