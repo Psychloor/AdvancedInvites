@@ -125,6 +125,7 @@ namespace AdvancedInvites
                 yield return LoadAudioClip((NotificationType)Enum.Parse(typeof(NotificationType), name));
         }
 
+        // Thanks Loukylor and Knah
         private static IEnumerator LoadAudioClip(NotificationType notificationType)
         {
             UnityWebRequest request = UnityWebRequest.Get(GetAudioPath(notificationType));

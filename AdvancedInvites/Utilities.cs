@@ -163,7 +163,7 @@ namespace AdvancedInvites
                     if (!method.XRefScanFor("voteToKick")) continue;
 
                     // Notification Manager count seems to be at least 3 of
-                    if (method.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) < 2
+                    if (method.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) < 1
                         || method.XRefScanMethodCount(null, nameof(NotificationManager)) < 3) continue;
 
                     // The real one is used by the quick menu and itself 

@@ -3,10 +3,11 @@ namespace AdvancedInvites
 {
 
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
     using MelonLoader;
-
+    using Transmtn.DTO.Notifications;
     using UnhollowerRuntimeLib.XrefScans;
 
     internal static class DebugTesting
@@ -14,7 +15,8 @@ namespace AdvancedInvites
 
         internal static void Test()
         {
-            /*foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(
+            /*
+            foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(
                 m => m.ReturnType == typeof(void)
                      && m.GetParameters().Length == 2
                      && m.GetParameters()[0].ParameterType == typeof(Notification)
@@ -34,7 +36,7 @@ namespace AdvancedInvites
                 }
             }*/
 
-            /*MelonLogger.Msg("Checking For Delete");
+            MelonLogger.Msg("Checking For Delete");
             foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (methodInfo.Name.StartsWith("Method_Public_Void")
@@ -45,7 +47,7 @@ namespace AdvancedInvites
                 }
             }
 
-            var deleteMethod = typeof(NotificationManager).GetMethod("Method_Public_Void_Notification_1", BindingFlags.Public | BindingFlags.Instance);
+            var deleteMethod = typeof(NotificationManager).GetMethod("Method_Public_Void_Notification_0", BindingFlags.Public | BindingFlags.Instance);
             MelonLogger.Msg("Types using delete");
             HashSet<string> collectedTypes = new HashSet<string>();
             foreach (XrefInstance instance in XrefScanner.UsedBy(deleteMethod))
@@ -58,7 +60,7 @@ namespace AdvancedInvites
                     collectedTypes.Add(resolved.DeclaringType?.ToString());
                     MelonLogger.Msg(resolved.DeclaringType?.ToString());
                 }
-            }*/
+            }
 
             /*MelonLogger.Msg("Finding Streamermode");
             foreach (PropertyInfo property in typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static))
