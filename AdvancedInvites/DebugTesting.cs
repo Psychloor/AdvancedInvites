@@ -35,7 +35,7 @@ namespace AdvancedInvites
                     setting.prop_EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique_0 == VRCInputManager.EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique.StreamerModeEnabled
                 }
             }*/
-
+            /*
             MelonLogger.Msg("Checking For Delete");
             foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -60,7 +60,19 @@ namespace AdvancedInvites
                     collectedTypes.Add(resolved.DeclaringType?.ToString());
                     MelonLogger.Msg(resolved.DeclaringType?.ToString());
                 }
+            }*/
+            /*
+            MelonLogger.Msg("Checking For Add");
+            foreach (MethodInfo addNotificationMethod in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (addNotificationMethod.Name.StartsWith("Method_Public_")
+                    && addNotificationMethod.GetParameters().Length == 1
+                    && addNotificationMethod.GetParameters()[0].ParameterType == typeof(Notification))
+                {
+                    addNotificationMethod.DumpTypesUsedBy();
+                }
             }
+            */
 
             /*MelonLogger.Msg("Finding Streamermode");
             foreach (PropertyInfo property in typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static))
@@ -109,7 +121,6 @@ namespace AdvancedInvites
 
             MelonLogger.Msg("");
         }
-
     }
 
 }

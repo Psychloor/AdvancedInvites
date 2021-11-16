@@ -100,7 +100,7 @@
             {
                 //Appears to be NotificationManager.Method_Private_String_Notification_1
                 MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                    m => m.Name.StartsWith("Method_Private_")
+                    m => m.Name.StartsWith("Method_Public_")
                          && m.ReturnType == typeof(string)
                          && m.GetParameters().Length == 1
                          && m.GetParameters()[0].ParameterType == typeof(Notification)
