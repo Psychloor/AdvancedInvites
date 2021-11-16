@@ -245,8 +245,8 @@ namespace AdvancedInvites
 
         public static bool GetStreamerMode()
         {
-            return VRCInputManager.Method_Public_Static_Boolean_EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique_0(
-                VRCInputManager.EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique.StreamerModeEnabled);
+            return VRCInputManager.Method_Public_Static_Boolean_InputSetting_0(
+                VRCInputManager.InputSetting.StreamerModeEnabled);
         }
 
     #if DEBUG
