@@ -62,7 +62,7 @@
 
             Localization.Load();
 
-        #if DEBUG
+#if DEBUG
             DebugTesting.Test();
 
             try
@@ -78,7 +78,7 @@
             {
                 MelonLogger.Error("Error Patching SendNotification: " + e.Message);
             }
-        #endif
+#endif
 
             try
             {
@@ -200,11 +200,15 @@
             if (instancePtr == IntPtr.Zero
                 || notificationPtr == IntPtr.Zero) return IntPtr.Zero;
 
-#if DEBUG
-            MelonLogger.Msg("AddNotification");
-#endif
-
             Notification notification = new Notification(notificationPtr);
+
+#if DEBUG
+            try
+            {
+                MelonLogger.Msg("AddNotification: " + notification.notificationType);
+            }
+            catch { }
+#endif
 
             if (!HandledNotifications.Contains(notification.id))
             {
@@ -226,14 +230,14 @@
             switch (notification.notificationType.ToLowerInvariant())
             {
                 case "invite":
-                #if DEBUG
+#if DEBUG
                     if (notification.details?.keys != null)
                         foreach (string key in notification.details?.keys)
                         {
                             MelonLogger.Msg("Invite Details Key: " + key);
                             if (notification.details != null) MelonLogger.Msg("Invite Details Value: " + notification.details[key].ToString());
                         }
-                #endif
+#endif
 
                     if (APIUser.CurrentUser.statusIsSetToDoNotDisturb
                         && !ignoreBusyStatus) return;
@@ -327,9 +331,6 @@
             {
                 if (thisPtr == IntPtr.Zero
                     || notificationPtr == IntPtr.Zero) return;
-#if DEBUG
-                MelonLogger.Msg("AcceptNotification");
-#endif
 
                 if (Utilities.GetStreamerMode())
                 {
@@ -338,6 +339,15 @@
                 }
 
                 Notification notification = new Notification(notificationPtr);
+
+#if DEBUG
+                try
+                {
+                    MelonLogger.Msg("AcceptNotification: " + notification.notificationType);
+                }
+                catch { }
+#endif
+
                 if (notification.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase))
                 {
                     InviteHandler.HandleInvite(notification);
@@ -358,7 +368,7 @@
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void AcceptNotificationDelegate(IntPtr thisPtr, IntPtr notification, IntPtr returnedException);
 
-    #if DEBUG
+#if DEBUG
         public override void OnUpdate()
         {
             if (Input.GetKeyDown(KeyCode.P)) Utilities.Request();
@@ -385,7 +395,7 @@
         {
             MelonLogger.Msg("Streamer Mode Set To " + __0);
         }
-    #endif
+#endif
 
     }
 
