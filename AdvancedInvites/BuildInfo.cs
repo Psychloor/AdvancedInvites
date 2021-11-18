@@ -39,7 +39,9 @@ namespace AdvancedInvites
         // 1.6.5 instance caching and regions
         // 1.6.5.1 https://github.com/Psychloor/AdvancedInvites/issues/7
         // 1.6.6 mod assistant doesn't like major minor build release semver and crashes
-        public const string Version = "1.6.7";
+        // 1.6.7 Updated for build 1128, fixed sound loading issue, delete works again
+        // 1.6.8 Updated for VRC build 1149
+        public const string Version = "1.6.8";
 
     }
 
