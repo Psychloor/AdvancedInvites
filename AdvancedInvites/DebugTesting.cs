@@ -61,18 +61,14 @@ namespace AdvancedInvites
                     MelonLogger.Msg(resolved.DeclaringType?.ToString());
                 }
             }*/
-            /*
+
             MelonLogger.Msg("Checking For Add");
-            foreach (MethodInfo addNotificationMethod in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))
-            {
-                if (addNotificationMethod.Name.StartsWith("Method_Public_")
-                    && addNotificationMethod.GetParameters().Length == 1
-                    && addNotificationMethod.GetParameters()[0].ParameterType == typeof(Notification))
-                {
-                    addNotificationMethod.DumpTypesUsedBy();
-                }
-            }
-            */
+            MethodInfo addNotificationMethod = typeof(NotificationManager.ObjectNPrivateSealedNoVoBonoNo0).GetMethod(
+                nameof(NotificationManager.ObjectNPrivateSealedNoVoBonoNo0._AddNotification_b__0));
+
+            addNotificationMethod.XrefDump();
+            addNotificationMethod.DumpTypesUsedBy();
+
 
             /*MelonLogger.Msg("Finding Streamermode");
             foreach (PropertyInfo property in typeof(VRCInputManager).GetProperties(BindingFlags.Public | BindingFlags.Static))

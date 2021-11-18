@@ -99,12 +99,10 @@
             try
             {
                 //Appears to be NotificationManager.Method_Private_String_Notification_1
-                MethodInfo addNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
-                    m => m.Name.StartsWith("Method_Public_")
-                         && m.ReturnType == typeof(string)
-                         && m.GetParameters().Length == 1
+                MethodInfo addNotificationMethod = typeof(NotificationManager.ObjectNPrivateSealedNoVoBonoNo0).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                    m => m.GetParameters().Length == 1
                          && m.GetParameters()[0].ParameterType == typeof(Notification)
-                         && m.XRefScanFor("imageUrl"));
+                         && m.Name.IndexOf("addNotification", StringComparison.OrdinalIgnoreCase) >= 0);
                 addNotificationDelegate = Patch<AddNotificationDelegate>(addNotificationMethod, GetDetour(nameof(AddNotificationPatch)));
             }
             catch (Exception e)
@@ -202,7 +200,12 @@
             if (instancePtr == IntPtr.Zero
                 || notificationPtr == IntPtr.Zero) return IntPtr.Zero;
 
+#if DEBUG
+            MelonLogger.Msg("AddNotification");
+#endif
+
             Notification notification = new Notification(notificationPtr);
+
             if (!HandledNotifications.Contains(notification.id))
             {
                 HandledNotifications.Add(notification.id);
@@ -324,6 +327,10 @@
             {
                 if (thisPtr == IntPtr.Zero
                     || notificationPtr == IntPtr.Zero) return;
+#if DEBUG
+                MelonLogger.Msg("AcceptNotification");
+#endif
+
                 if (Utilities.GetStreamerMode())
                 {
                     acceptNotificationDelegate(thisPtr, notificationPtr, returnedException);
