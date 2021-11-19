@@ -42,7 +42,8 @@ namespace AdvancedInvites
         // 1.6.7 Updated for build 1128, fixed sound loading issue, delete works again
         // 1.6.8 Updated for VRC build 1149
         // 1.6.9 Updated for VRC build 1151
-        public const string Version = "1.6.9";
+        // 1.6.10 Hopefully fixed NRE
+        public const string Version = "1.6.10";
 
     }
 

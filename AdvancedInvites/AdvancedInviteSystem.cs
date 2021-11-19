@@ -210,7 +210,7 @@
             catch { }
 #endif
 
-            if (!HandledNotifications.Contains(notification.id))
+            if (notification.id != null && !HandledNotifications.Contains(notification.id))
             {
                 HandledNotifications.Add(notification.id);
                 HandleNotification(ref notification);
@@ -227,7 +227,7 @@
             if (Utilities.CurrentRoom() == null
                 || Utilities.CurrentWorldInstance() == null) return;
 
-            switch (notification.notificationType.ToLowerInvariant())
+            if (notification.notificationType != null) switch (notification.notificationType.ToLowerInvariant())
             {
                 case "invite":
 #if DEBUG
@@ -348,7 +348,7 @@
                 catch { }
 #endif
 
-                if (notification.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase))
+                if (notification.notificationType != null && notification.notificationType.Equals("invite", StringComparison.OrdinalIgnoreCase))
                 {
                     InviteHandler.HandleInvite(notification);
                     return;
