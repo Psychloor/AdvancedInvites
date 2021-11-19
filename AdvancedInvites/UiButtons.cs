@@ -15,7 +15,7 @@ namespace AdvancedInvites
 
         private static APIUser CurrentSelectedUser => QuickMenu.prop_QuickMenu_0.field_Private_APIUser_0;
 
-        private static APIUser CurrentSocialUser => Object.FindObjectOfType<PageUserInfo>()?.field_Public_APIUser_0;
+        private static APIUser CurrentSocialUser => Object.FindObjectOfType<PageUserInfo>()?.field_Private_APIUser_0;
 
         public static void Initialize()
         {
