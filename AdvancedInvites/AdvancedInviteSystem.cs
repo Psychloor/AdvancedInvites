@@ -45,6 +45,7 @@
 
         public override void OnApplicationStart()
         {
+            Utilities.LoggerInstance = LoggerInstance;
             advInvPreferencesCategory = MelonPreferences.CreateCategory("AdvancedInvites", "Advanced Invites");
 
             advInvPreferencesCategory.CreateEntry("DeleteNotifications", InviteHandler.DeleteNotifications, "Delete Notification After Successful Use");
@@ -76,7 +77,7 @@
             }
             catch (Exception e)
             {
-                MelonLogger.Error("Error Patching SendNotification: " + e.Message);
+                Utilities.LoggerInstance.Error("Error Patching SendNotification: " + e.Message);
             }
 
             try
@@ -106,7 +107,7 @@
             }
             catch (Exception e)
             {
-                MelonLogger.Error("Error Patching AcceptNotification: " + e.Message);
+                Utilities.LoggerInstance.Error("Error Patching AcceptNotification: " + e.Message);
             }
 
             
@@ -119,7 +120,7 @@
             }
             catch (Exception e)
             {
-                MelonLogger.Error("Error Patching AddNotification: " + e.Message);
+                Utilities.LoggerInstance.Error("Error Patching AddNotification: " + e.Message);
             }
             
 
@@ -134,7 +135,7 @@
             }
             catch (Exception e)
             {
-                MelonLogger.Error("Error Patching FadeTo: " + e.Message);
+                Utilities.LoggerInstance.Error("Error Patching FadeTo: " + e.Message);
             }
 
             UserPermissionHandler.LoadSettings();
@@ -218,7 +219,7 @@
 #if DEBUG
             try
             {
-                MelonLogger.Msg("AddNotification: " + notification.notificationType);
+                Utilities.LoggerInstance.Msg("AddNotification: " + notification.notificationType);
             }
             catch { }
 #endif
@@ -247,8 +248,8 @@
                     if (notification.details?.keys != null)
                         foreach (string key in notification.details?.keys)
                         {
-                            MelonLogger.Msg("Invite Details Key: " + key);
-                            if (notification.details != null) MelonLogger.Msg("Invite Details Value: " + notification.details[key].ToString());
+                            Utilities.LoggerInstance.Msg("Invite Details Key: " + key);
+                            if (notification.details != null) Utilities.LoggerInstance.Msg("Invite Details Value: " + notification.details[key].ToString());
                         }
 #endif
 
@@ -356,7 +357,7 @@
 #if DEBUG
                 try
                 {
-                    MelonLogger.Msg("AcceptNotification: " + notification.notificationType);
+                    Utilities.LoggerInstance.Msg("AcceptNotification: " + notification.notificationType);
                 }
                 catch { }
 #endif
@@ -369,7 +370,7 @@
             }
             catch (Exception e)
             {
-                MelonLogger.Error($"Exception in accept notification patch: {e}");
+                Utilities.LoggerInstance.Error($"Exception in accept notification patch: {e}");
             }
 
             acceptNotificationDelegate(thisPtr, notificationPtr, returnedException);
@@ -392,14 +393,14 @@
         private static bool SendNotificationPatch(string __0, string __1, string __2, string __3, NotificationDetails __4, Il2CppStructArray<byte> __5)
         {
             // Method_Public_Void_String_String_String_String_NotificationDetails_ArrayOf_Byte_0
-            MelonLogger.Msg("Sending Notification:");
-            MelonLogger.Msg($"\tString: {__0}");
-            MelonLogger.Msg($"\tString: {__1}");
-            MelonLogger.Msg($"\tString: {__2}");
-            MelonLogger.Msg($"\tString: {__3}");
-            MelonLogger.Msg($"\tDetails: {__4?.ToString()}");
-            MelonLogger.Msg($"\tLength: {__5?.Length} Bytes: {__5}");
-            MelonLogger.Msg("");
+            Utilities.LoggerInstance.Msg("Sending Notification:");
+            Utilities.LoggerInstance.Msg($"\tString: {__0}");
+            Utilities.LoggerInstance.Msg($"\tString: {__1}");
+            Utilities.LoggerInstance.Msg($"\tString: {__2}");
+            Utilities.LoggerInstance.Msg($"\tString: {__3}");
+            Utilities.LoggerInstance.Msg($"\tDetails: {__4?.ToString()}");
+            Utilities.LoggerInstance.Msg($"\tLength: {__5?.Length} Bytes: {__5}");
+            Utilities.LoggerInstance.Msg("");
 
             return true;
         }
@@ -418,7 +419,7 @@
 
         private static void SetStreamerModePostfix(bool __0)
         {
-            MelonLogger.Msg("Streamer Mode Set To " + __0);
+            Utilities.LoggerInstance.Msg("Streamer Mode Set To " + __0);
         }
 #endif
 

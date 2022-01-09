@@ -28,13 +28,13 @@ namespace AdvancedInvites
 
             if (!File.Exists(FilePath))
             {
-                MelonLogger.Msg("Localization File Not Found. Creating It");
+                Utilities.LoggerInstance.Msg("Localization File Not Found. Creating It");
                 File.WriteAllText(FilePath, JsonConvert.SerializeObject(localizedText, Formatting.Indented), Encoding.UTF8);
             }
 
             /*if (File.GetLastWriteTime(FilePath).Date < new DateTime(2021, 6, 23))
             {
-                MelonLogger.Msg("Old localization found, resetting it");
+                Utilities.LoggerInstance.Msg("Old localization found, resetting it");
                 File.WriteAllText(FilePath, JsonConvert.SerializeObject(localizedText, Formatting.Indented), Encoding.UTF8);
             }*/
 
@@ -46,7 +46,7 @@ namespace AdvancedInvites
             }
             catch (Exception e)
             {
-                MelonLogger.Error("Error Loading Localization, loading defaults:\n" + e);
+                Utilities.LoggerInstance.Error("Error Loading Localization, loading defaults:\n" + e);
                 localizedText = new LocalizedText();
             }
 

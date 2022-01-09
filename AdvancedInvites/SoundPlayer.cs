@@ -85,18 +85,18 @@ namespace AdvancedInvites
                 instance.audioClipDictionary.Clear();
             }
 
-            MelonLogger.Msg("Loading Notification Sound(s)");
+            Utilities.LoggerInstance.Msg("Loading Notification Sound(s)");
 
             // Legacy Convert
             if (File.Exists(Path.GetFullPath(Path.Combine(AudioResourceFolder, "Notification.ogg"))))
             {
-                MelonLogger.Msg("Found old notification file. renaming to Default.ogg");
+                Utilities.LoggerInstance.Msg("Found old notification file. renaming to Default.ogg");
                 File.Move(Path.GetFullPath(Path.Combine(AudioResourceFolder, "Notification.ogg")), GetAudioPath(NotificationType.Default));
             }
 
             if (!File.Exists(GetAudioPath(NotificationType.Default)))
             {
-                MelonLogger.Msg("Default Notification sound not found. Creating default one");
+                Utilities.LoggerInstance.Msg("Default Notification sound not found. Creating default one");
                 try
                 {
                     using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AdvancedInvites.Notification.ogg");
@@ -109,12 +109,12 @@ namespace AdvancedInvites
                     }
                     else
                     {
-                        MelonLogger.Error("Failed to open Resource Stream for Notification.ogg");
+                        Utilities.LoggerInstance.Error("Failed to open Resource Stream for Notification.ogg");
                     }
                 }
                 catch (Exception e)
                 {
-                    MelonLogger.Error("Something went wrong writing the default notification file to UserData/AdvancedInvites Folder:\n" + e);
+                    Utilities.LoggerInstance.Error("Something went wrong writing the default notification file to UserData/AdvancedInvites Folder:\n" + e);
                     yield break;
                 }
             }
@@ -141,11 +141,11 @@ namespace AdvancedInvites
             {
                 instance.audioClipDictionary.Add(notificationType, audioClip);
                 instance.audioClipDictionary[notificationType].hideFlags = HideFlags.HideAndDontSave;
-                MelonLogger.Msg($"{notificationType} Notification Sound Loaded");
+                Utilities.LoggerInstance.Msg($"{notificationType} Notification Sound Loaded");
             }
             else if (audioClip.loadState == AudioDataLoadState.Failed)
             {
-                MelonLogger.Error($"Failed To Load {notificationType} Notification Sound");
+                Utilities.LoggerInstance.Error($"Failed To Load {notificationType} Notification Sound");
             }
         }
 
