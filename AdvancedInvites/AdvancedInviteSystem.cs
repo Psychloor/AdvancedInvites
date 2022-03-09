@@ -78,11 +78,24 @@
             {
                 MelonLogger.Error("Error Patching SendNotification: " + e.Message);
             }
+
+            try
+            {
+                MethodInfo deleteNotificationMethod = typeof(NotificationManager).GetMethod(
+                    nameof(NotificationManager.Method_Public_Void_Notification_0),
+                    BindingFlags.Public | BindingFlags.Instance);
+                HarmonyInstance.Patch(
+                    deleteNotificationMethod,
+                    new HarmonyMethod(typeof(AdvancedInviteSystem).GetMethod(nameof(DeleteNotificationPatch), BindingFlags.NonPublic | BindingFlags.Static)));
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("Error Patching DeleteNotification: " + e.Message);
+            }
 #endif
 
             try
             {
-                // Appears to be NotificationManager.Method_Private_Void_Notification_1
                 MethodInfo acceptNotificationMethod = typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
                     m => m.GetParameters().Length == 1
                          && m.GetParameters()[0].ParameterType == typeof(Notification)
@@ -96,19 +109,19 @@
                 MelonLogger.Error("Error Patching AcceptNotification: " + e.Message);
             }
 
+            
             try
             {
-                //Appears to be NotificationManager.Method_Private_String_Notification_1
-                MethodInfo addNotificationMethod = typeof(NotificationManager.ObjectNPrivateSealedNoVoBonoNo0).GetMethods(BindingFlags.Public | BindingFlags.Instance).Single(
+                MethodInfo addNotificationMethod = typeof(NotificationManager.ObjectNPrivateSealedNoBoVoNoBoNoBoNoBoNo0).GetMethods(BindingFlags.Public | BindingFlags.Instance).First(
                     m => m.GetParameters().Length == 1
-                         && m.GetParameters()[0].ParameterType == typeof(Notification)
-                         && m.Name.IndexOf("addNotification", StringComparison.OrdinalIgnoreCase) >= 0);
+                         && m.GetParameters()[0].ParameterType == typeof(Notification));
                 addNotificationDelegate = Patch<AddNotificationDelegate>(addNotificationMethod, GetDetour(nameof(AddNotificationPatch)));
             }
             catch (Exception e)
             {
                 MelonLogger.Error("Error Patching AddNotification: " + e.Message);
             }
+            
 
             try
             {
@@ -386,6 +399,18 @@
             MelonLogger.Msg($"\tString: {__3}");
             MelonLogger.Msg($"\tDetails: {__4?.ToString()}");
             MelonLogger.Msg($"\tLength: {__5?.Length} Bytes: {__5}");
+            MelonLogger.Msg("");
+
+            return true;
+        }
+
+        private static bool DeleteNotificationPatch(Notification param_1)
+        {
+            // Method_Public_Void_String_String_String_String_NotificationDetails_ArrayOf_Byte_0
+            MelonLogger.Msg("DeleteNotification:");
+            MelonLogger.Msg($"\tnotificationType: {param_1.notificationType}");
+            MelonLogger.Msg($"\tsenderUsername: {param_1.senderUsername}");
+            MelonLogger.Msg($"\tmessage: {param_1.message}");
             MelonLogger.Msg("");
 
             return true;

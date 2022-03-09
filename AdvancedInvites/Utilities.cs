@@ -138,7 +138,7 @@ namespace AdvancedInvites
                 if (ourCreatePortalDelegate != null) return ourCreatePortalDelegate;
                 MethodInfo portalMethod = typeof(PortalInternal).GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly).First(
                     m => m.ReturnType == typeof(bool)
-                         && m.HasParameters(typeof(ApiWorld), typeof(ApiWorldInstance), typeof(Vector3), typeof(Vector3), typeof(bool))
+                         && m.HasParameters(typeof(ApiWorld), typeof(ApiWorldInstance), typeof(Vector3), typeof(Vector3))
                          && m.XRefScanFor("admin_dont_allow_portal"));
                 ourCreatePortalDelegate = (CreatePortalDelegate)Delegate.CreateDelegate(typeof(CreatePortalDelegate), portalMethod);
                 return ourCreatePortalDelegate;
@@ -163,14 +163,14 @@ namespace AdvancedInvites
                     if (!method.XRefScanFor("voteToKick")) continue;
 
                     // Notification Manager count seems to be at least 3 of
-                    if (method.XRefScanMethodCount(null, nameof(VRCWebSocketsManager)) < 1
+                    if (method.XRefScanMethodCount(null, nameof(MonoBehaviourPublicObApAcApStAcBoStBoObUnique)) < 1
                         || method.XRefScanMethodCount(null, nameof(NotificationManager)) < 3) continue;
 
                     // The real one is used by the quick menu and itself 
                     if (!XrefScanner.UsedBy(method).Any(
                             instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(NotificationManager))) continue;
                     if (!XrefScanner.UsedBy(method).Any(
-                            instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(QuickMenu)))
+                            instance => instance.Type == XrefType.Method && instance.TryResolve()?.DeclaringType == typeof(Object1Public1TeBo1TeStOb1DaStUnique)))
                         continue;
 
                     // Well seems to be the right one, let's grab it
@@ -352,9 +352,9 @@ namespace AdvancedInvites
                 };
         }
 
-        public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool showAlerts)
+        public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, IntPtr errorReasonCallback)
         {
-            return GetCreatePortalDelegate(apiWorld, apiWorldInstance, position, forward, showAlerts);
+            return GetCreatePortalDelegate(apiWorld, apiWorldInstance, position, forward, errorReasonCallback);
         }
 
         public static void DeleteNotification(Notification notification)
@@ -515,7 +515,7 @@ namespace AdvancedInvites
             NotificationDetails notificationDetails,
             Il2CppStructArray<byte> picDataIGuess = null);
 
-        private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, bool withUIErrors);
+        private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, IntPtr errorReasonCallback);
 
         private delegate void DeleteNotificationDelegate(Notification notification);
 

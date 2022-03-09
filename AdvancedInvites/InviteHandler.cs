@@ -73,8 +73,6 @@ namespace AdvancedInvites
 
         private static void DropPortal()
         {
-            const bool ShowAlerts = true;
-
             // Fetch the world to know it exists and also needed for the world tags during the portal creation stage
             API.Fetch<ApiWorld>(
                 worldId,
@@ -82,21 +80,32 @@ namespace AdvancedInvites
                 // On Success which it'll be if valid vanilla invite
                 new Action<ApiContainer>(
                     container =>
-                        {
-                            Utilities.HideCurrentPopup();
-                            ApiWorld apiWorld = container.Model.Cast<ApiWorld>();
-                            ApiWorldInstance apiWorldInstance = new ApiWorldInstance(apiWorld, instanceIdWithTags);
+                    {
+                        Utilities.HideCurrentPopup();
+                        ApiWorld apiWorld = container.Model.Cast<ApiWorld>();
+                        ApiWorldInstance apiWorldInstance = new ApiWorldInstance(apiWorld, instanceIdWithTags);
 
-                            Transform playerTransform = Utilities.GetLocalPlayerTransform();
+                        Transform playerTransform = Utilities.GetLocalPlayerTransform();
 
-                            // CreatePortal (before il2cpp)
-                            bool created = Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward, ShowAlerts);
-                            if (created && DeleteNotifications)
-                                Utilities.DeleteNotification(currentNotification);
-                        }),
+                // CreatePortal (before il2cpp)
+                bool created = Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward,
+                    GetFunctionPointer(nameof(ShowErrorReason)));
+                        if (created && DeleteNotifications)
+                            Utilities.DeleteNotification(currentNotification);
+                    }),
 
                 // On Failure
                 new Action<ApiContainer>(container => Utilities.ShowAlert("Error Fetching World", container.Error)));
+        }
+
+        public static void ShowErrorReason(string error)
+        {
+            Utilities.ShowAlert("Error Creating Portal", error);
+        }
+
+        private static IntPtr GetFunctionPointer(string methodName)
+        {
+            return typeof(Utilities).GetMethod(methodName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Static)!.MethodHandle.GetFunctionPointer();
         }
 
         private static void JoinYourself()

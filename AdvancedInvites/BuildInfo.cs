@@ -43,7 +43,8 @@ namespace AdvancedInvites
         // 1.6.8 Updated for VRC build 1149
         // 1.6.9 Updated for VRC build 1151
         // 1.6.10 Hopefully fixed NRE
-        public const string Version = "1.6.10";
+        // 1.7.0 Updated for VRC build 1171
+        public const string Version = "1.7.0";
 
     }
 

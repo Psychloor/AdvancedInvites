@@ -1,7 +1,7 @@
 #if DEBUG
 namespace AdvancedInvites
 {
-
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -35,7 +35,41 @@ namespace AdvancedInvites
                     setting.prop_EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique_0 == VRCInputManager.EnumNPublicSealedvaUnCoHeToTaThShPeVoUnique.StreamerModeEnabled
                 }
             }*/
+
             /*
+            MelonLogger.Msg("Checking For Add");
+            foreach (MethodInfo methodInfo in typeof(NotificationManager.ObjectNPrivateSealedNoBoVoNoBoNoBoNoBoNo0).GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (methodInfo.Name.StartsWith("Method_Internal_Boolean")
+                     && methodInfo.GetParameters().Length == 1
+                     && methodInfo.GetParameters()[0].ParameterType == typeof(Notification))
+                {
+                    try
+                    {
+                        methodInfo.XrefDump();
+                    }
+                    catch (Exception e)
+                    {
+                        MelonLogger.Warning(e.Message);
+                    }
+                }
+            }
+
+            var addMethod = typeof(NotificationManager.ObjectNPrivateSealedNoBoVoNoBoNoBoNoBoNo0).GetMethod("Method_Internal_Boolean_Notification_PDM_0", BindingFlags.Public | BindingFlags.Instance);
+            MelonLogger.Msg("Types using add");
+            HashSet<string> collectedTypes = new HashSet<string>();
+            foreach (XrefInstance instance in XrefScanner.UsedBy(addMethod))
+            {
+                if (instance.Type == XrefType.Method)
+                {
+                    var resolved = instance.TryResolve();
+                    if (resolved == null) continue;
+                    if (collectedTypes.Contains(resolved.DeclaringType?.ToString())) continue;
+                    collectedTypes.Add(resolved.DeclaringType?.ToString());
+                    MelonLogger.Msg(resolved.DeclaringType?.ToString());
+                }
+            }
+
             MelonLogger.Msg("Checking For Delete");
             foreach (MethodInfo methodInfo in typeof(NotificationManager).GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -48,8 +82,8 @@ namespace AdvancedInvites
             }
 
             var deleteMethod = typeof(NotificationManager).GetMethod("Method_Public_Void_Notification_0", BindingFlags.Public | BindingFlags.Instance);
-            MelonLogger.Msg("Types using delete");
-            HashSet<string> collectedTypes = new HashSet<string>();
+            MelonLogger.Msg("Types using delete0");
+            collectedTypes = new HashSet<string>();
             foreach (XrefInstance instance in XrefScanner.UsedBy(deleteMethod))
             {
                 if (instance.Type == XrefType.Method)
@@ -60,14 +94,24 @@ namespace AdvancedInvites
                     collectedTypes.Add(resolved.DeclaringType?.ToString());
                     MelonLogger.Msg(resolved.DeclaringType?.ToString());
                 }
-            }*/
+            }
 
-            MelonLogger.Msg("Checking For Add");
-            MethodInfo addNotificationMethod = typeof(NotificationManager.ObjectNPrivateSealedNoVoBonoNo0).GetMethod(
-                nameof(NotificationManager.ObjectNPrivateSealedNoVoBonoNo0._AddNotification_b__0));
+            deleteMethod = typeof(NotificationManager).GetMethod("Method_Public_Void_Notification_6", BindingFlags.Public | BindingFlags.Instance);
+            MelonLogger.Msg("Types using delete6");
+            collectedTypes = new HashSet<string>();
+            foreach (XrefInstance instance in XrefScanner.UsedBy(deleteMethod))
+            {
+                if (instance.Type == XrefType.Method)
+                {
+                    var resolved = instance.TryResolve();
+                    if (resolved == null) continue;
+                    if (collectedTypes.Contains(resolved.DeclaringType?.ToString())) continue;
+                    collectedTypes.Add(resolved.DeclaringType?.ToString());
+                    MelonLogger.Msg(resolved.DeclaringType?.ToString());
+                }
+            }
 
-            addNotificationMethod.XrefDump();
-            addNotificationMethod.DumpTypesUsedBy();
+            */
 
 
             /*MelonLogger.Msg("Finding Streamermode");
