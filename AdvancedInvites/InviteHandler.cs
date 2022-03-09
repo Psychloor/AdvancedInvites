@@ -89,23 +89,13 @@ namespace AdvancedInvites
 
                 // CreatePortal (before il2cpp)
                 bool created = Utilities.CreatePortal(apiWorld, apiWorldInstance, playerTransform.position, playerTransform.forward,
-                    GetFunctionPointer(nameof(ShowErrorReason)));
+                    Utilities.ShowErrorReason);
                         if (created && DeleteNotifications)
                             Utilities.DeleteNotification(currentNotification);
                     }),
 
                 // On Failure
                 new Action<ApiContainer>(container => Utilities.ShowAlert("Error Fetching World", container.Error)));
-        }
-
-        public static void ShowErrorReason(string error)
-        {
-            Utilities.ShowAlert("Error Creating Portal", error);
-        }
-
-        private static IntPtr GetFunctionPointer(string methodName)
-        {
-            return typeof(Utilities).GetMethod(methodName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Static)!.MethodHandle.GetFunctionPointer();
         }
 
         private static void JoinYourself()

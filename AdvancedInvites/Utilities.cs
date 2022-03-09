@@ -352,9 +352,19 @@ namespace AdvancedInvites
                 };
         }
 
-        public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, IntPtr errorReasonCallback)
+        public static bool CreatePortal(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, Action<string> errorReasonCallback)
         {
             return GetCreatePortalDelegate(apiWorld, apiWorldInstance, position, forward, errorReasonCallback);
+        }
+
+        public static void ShowErrorReason(string error)
+        {
+            Utilities.ShowAlert("Error Creating Portal", error);
+        }
+
+        internal static IntPtr GetFunctionPointer(string methodName)
+        {
+            return typeof(Utilities).GetMethod(methodName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Static)!.MethodHandle.GetFunctionPointer();
         }
 
         public static void DeleteNotification(Notification notification)
@@ -515,7 +525,7 @@ namespace AdvancedInvites
             NotificationDetails notificationDetails,
             Il2CppStructArray<byte> picDataIGuess = null);
 
-        private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, IntPtr errorReasonCallback);
+        private delegate bool CreatePortalDelegate(ApiWorld apiWorld, ApiWorldInstance apiWorldInstance, Vector3 position, Vector3 forward, Il2CppSystem.Action<string> errorReasonCallback = null);
 
         private delegate void DeleteNotificationDelegate(Notification notification);
 
