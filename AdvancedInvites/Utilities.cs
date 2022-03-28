@@ -309,15 +309,23 @@ namespace AdvancedInvites
                 };
         }
 
+
         public static void AcceptInviteRequest(string receiverUserId, string receiverUserName)
         {
             ApiWorld currentRoom = CurrentRoom();
+            ApiWorldInstance currentInstance = CurrentWorldInstance();
             NotificationDetails details = new NotificationDetails();
-            details.Add("worldId", $"{currentRoom.id}:{CurrentInstanceCached.InstanceId}");
 
-            // don't ask me why, ask vrchat why they added instanceId as
-            // a direct copy of worldId with both having both world and instance id
-            details.Add("instanceId", $"{currentRoom.id}:{CurrentInstanceCached.InstanceId}");
+            if (string.IsNullOrEmpty(currentInstance.instanceId))
+            {
+                details.Add("worldId", $"{currentRoom.id}");
+                details.Add("instanceId", $"{currentRoom.id}");
+            }
+            else
+            {
+                details.Add("worldId", $"{currentRoom.id}:{currentInstance.instanceId}");
+                details.Add("instanceId", $"{currentRoom.id}:{currentInstance.instanceId}");
+            }
 
             //details.Add("rsvp", new Boolean { m_value = true }.BoxIl2CppObject()); // Doesn't work for some reason
             details.Add("worldName", currentRoom.name);
