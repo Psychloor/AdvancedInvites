@@ -23,6 +23,7 @@ namespace AdvancedInvites
 
     public static class Utilities
     {
+        
 
         public enum InstanceRegion
         {
@@ -240,6 +241,8 @@ namespace AdvancedInvites
                 return ourShowPopupWindowSingleDelegate;
             }
         }
+
+        public static MelonLogger.Instance LoggerInstance { get; set; }
 
         //private static StreamerModeDelegate ourStreamerModeDelegate;
 
